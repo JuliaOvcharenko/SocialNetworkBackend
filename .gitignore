@@ -1,7 +1,7 @@
 /node_modules/
 .env
 dev.db
-/src/generated/prisma
+/generated/prisma
 
 /prisma/db
 /prisma/migrations
