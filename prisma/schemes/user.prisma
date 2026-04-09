@@ -1,10 +1,10 @@
 model User {
     id        Int      @id @default(autoincrement())
-    name      String
-    surname   String
-    nickname  String   @unique
+    name      String?
+    surname   String?
+    nickname  String?   @unique
     email     String   @unique
-    birthDate DateTime @updatedAt
+    birthDate DateTime? @updatedAt
     password  String
-    signature String
+    signature String?
 }

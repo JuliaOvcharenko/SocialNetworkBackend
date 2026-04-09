@@ -20,6 +20,7 @@ export class BadRequestError extends AppErrors{
 }
 
 export class ValidateError extends AppErrors{
+	inner: any;
     constructor(message: string = `The form said: "not today" 👀. Please check that the fields are filled in correctly.` ){
         super(message, 422)
     }
