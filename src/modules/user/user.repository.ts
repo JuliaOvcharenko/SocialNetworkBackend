@@ -44,6 +44,13 @@ export const UserRepository: UserRepositoryContract = {
             throw handlePrismaError(error);
         }
     },
+    async verify(id: number) {
+        return PrismaClient.user.update({
+            where: { id },
+            data: { isVerified: true, verificationCode: null },
+            omit: { password: true },
+        });
+    },
 };
 
 function handlePrismaError(error: unknown): Error {

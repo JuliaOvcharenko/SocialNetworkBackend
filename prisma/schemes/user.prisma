@@ -7,4 +7,6 @@ model User {
     birthDate DateTime? @updatedAt
     password  String
     signature String?
+    isVerified        Boolean?  @default(false)
+    verificationCode  String?
 }

@@ -23,3 +23,8 @@ export const registerSchema = yup.object({
         .max(250)
         .required("field is required"),
 });
+
+export const verifySchema = yup.object({
+    email: yup.string().email().required(),
+    code: yup.string().length(6).required(),
+});

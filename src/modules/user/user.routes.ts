@@ -1,7 +1,6 @@
 import { Router } from "express";
-import { loginSchema, registerSchema } from "./user.schema";
+import { loginSchema, registerSchema, verifySchema } from "./user.schema";
 import { validateMiddleware } from "../../middlewares/validate.middleware";
-import { processImageMiddleware, uploadMiddleware } from "../../middlewares/upload.middleware";
 import { UserController } from "./user.controller";
 import { authenticateMiddleware } from "../../middlewares/authenticate.middleware";
 
@@ -19,3 +18,9 @@ UserRoutes.post(
 	UserController.register,
 );
 UserRoutes.get("/me", authenticateMiddleware, UserController.me);
+
+UserRoutes.post(
+    "/verify",
+    validateMiddleware(verifySchema),
+    UserController.verify,
+);

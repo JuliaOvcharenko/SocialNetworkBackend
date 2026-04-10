@@ -28,4 +28,13 @@ export const UserController: UserControllerContract = {
 			next(error);
 		}
 	},
+
+	async verify(req, res, next) {
+		try {
+			const result = await UserService.verify(req.body);
+			res.json(result);
+		} catch (error) {
+			next(error);
+		}
+	},
 };
