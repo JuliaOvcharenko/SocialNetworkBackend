@@ -21,6 +21,7 @@ UserRoutes.get("/me", authenticateMiddleware, UserController.me);
 
 UserRoutes.post(
     "/verify",
+	authenticateMiddleware,
     validateMiddleware(verifySchema),
     UserController.verify,
 );

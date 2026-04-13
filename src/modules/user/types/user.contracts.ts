@@ -4,9 +4,9 @@ import { CreateUser, LoginCredentials, LoginUser, MeDTO, RegisterCredentials, Us
 
 export interface UserServiceContract {
     login: (credentials: LoginCredentials) => Promise<{ token: string }>;
-    register: (credentials: RegisterCredentials) => Promise<{ message: string }>;
+    register: (credentials: RegisterCredentials) => Promise<{ message: string, token: string }>;
     me: (dto: MeDTO) => Promise<User>;
-    verify: (dto: VerifyDTO) => Promise<{ token: string }>;
+    verify: (dto: VerifyDTO, userId: number) => Promise<{ token: string }>;
 }
 
 export interface UserRepositoryContract {
@@ -15,6 +15,7 @@ export interface UserRepositoryContract {
     create: (data: CreateUser) => Promise<User>;
     findById: (id: number) => Promise<User>;
     verify: (id: number) => Promise<User>;
+    findByIdWithPassword: (id: number) => Promise<User>
 }
 
 export interface UserControllerContract {

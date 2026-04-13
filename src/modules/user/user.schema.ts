@@ -25,6 +25,5 @@ export const registerSchema = yup.object({
 });
 
 export const verifySchema = yup.object({
-    email: yup.string().email().required(),
     code: yup.string().length(6).required(),
 });

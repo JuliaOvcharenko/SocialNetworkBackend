@@ -31,7 +31,7 @@ export const UserController: UserControllerContract = {
 
 	async verify(req, res, next) {
 		try {
-			const result = await UserService.verify(req.body);
+			const result = await UserService.verify(req.body, res.locals.userId);
 			res.json(result);
 		} catch (error) {
 			next(error);

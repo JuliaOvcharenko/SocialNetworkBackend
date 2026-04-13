@@ -4,4 +4,4 @@ import { UserRoutes } from '../modules/user/user.routes';
 
 export const appRouter = Router()
 
-appRouter.use("/users/", UserRoutes);
+appRouter.use("/api/users", UserRoutes);

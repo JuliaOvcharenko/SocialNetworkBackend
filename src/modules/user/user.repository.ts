@@ -51,6 +51,13 @@ export const UserRepository: UserRepositoryContract = {
             omit: { password: true },
         });
     },
+    async findByIdWithPassword(id: number) {
+        try {
+            return await PrismaClient.user.findFirstOrThrow({ where: { id } });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
+    },
 };
 
 function handlePrismaError(error: unknown): Error {
