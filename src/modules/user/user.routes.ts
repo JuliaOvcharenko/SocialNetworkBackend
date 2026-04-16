@@ -3,7 +3,7 @@ import { loginSchema, registerSchema, verifySchema } from "./user.schema";
 import { validateMiddleware } from "../../middlewares/validate.middleware";
 import { UserController } from "./user.controller";
 import { authenticateMiddleware } from "../../middlewares/authenticate.middleware";
-import { uploadMiddleware, processImageMiddleware } from "../../middlewares/upload.middleware"; // 👈 Додали імпорт
+import { uploadMiddleware, processImageMiddleware } from "../../middlewares/upload.middleware"; 
 
 export const UserRoutes = Router();
 

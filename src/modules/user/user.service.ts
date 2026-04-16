@@ -6,7 +6,7 @@ import { LoginError, ConflictError, NotFoundError, BadRequestError } from "../..
 import { UserServiceContract } from "./types/user.contracts";
 import { UserRepository } from "./user.repository";
 import { MailService } from "./mail.service";
-import { PrismaClient } from "../../prisma/client"; // 👈 Додали PrismaClient для роботи з аватарами
+import { PrismaClient } from "../../prisma/client";
 
 function generateCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
