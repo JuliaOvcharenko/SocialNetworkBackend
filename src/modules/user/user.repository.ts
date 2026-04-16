@@ -36,10 +36,20 @@ export const UserRepository: UserRepositoryContract = {
 
     async findById(id) {
         try {
-            return await PrismaClient.user.findFirstOrThrow({
+            // Получаем юзера с аватарками, включая пароль
+            const user = await PrismaClient.user.findFirstOrThrow({
                 where: { id },
-                omit: { password: true },
+                include: { 
+                    avatars: true 
+                },
             });
+
+            // Удаляем пароль из объекта юзера
+            const { password, ...userWithoutPassword } = user;
+
+            // Возвращаем юзера без пароля, но с аватарками
+            return userWithoutPassword;
+
         } catch (error) {
             throw handlePrismaError(error);
         }

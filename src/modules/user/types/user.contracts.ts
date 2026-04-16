@@ -1,21 +1,22 @@
-import {Request, Response, NextFunction} from "express";
+import { Request, Response, NextFunction } from "express";
 import { CreateUser, LoginCredentials, LoginUser, MeDTO, RegisterCredentials, User, UserWithPassword, VerifyDTO } from "./user.types";
-
 
 export interface UserServiceContract {
     login: (credentials: LoginCredentials) => Promise<{ token: string }>;
     register: (credentials: RegisterCredentials) => Promise<{ message: string, token: string }>;
     me: (dto: MeDTO) => Promise<User>;
     verify: (dto: VerifyDTO, userId: number) => Promise<{ token: string }>;
+    // 👇 Додано контракт для завантаження аватарки
+    uploadAvatar: (userId: number, file?: Express.Multer.File) => Promise<{ avatar: string }>;
 }
 
 export interface UserRepositoryContract {
-    findByEmailWithPassword: (email: string,) => Promise<UserWithPassword | null>;
+    findByEmailWithPassword: (email: string) => Promise<UserWithPassword | null>;
     findByEmail: (email: string) => Promise<User | null>;
     create: (data: CreateUser) => Promise<User>;
     findById: (id: number) => Promise<User>;
     verify: (id: number) => Promise<User>;
-    findByIdWithPassword: (id: number) => Promise<User>
+    findByIdWithPassword: (id: number) => Promise<User>;
 }
 
 export interface UserControllerContract {
@@ -23,7 +24,7 @@ export interface UserControllerContract {
         req: Request<object, { token: string }, LoginCredentials>,
         res: Response<{ token: string }>,
         next: NextFunction
-	) => void;
+    ) => void;
     register: (
         req: Request<object, { message: string }, RegisterCredentials>,
         res: Response<{ message: string }>,
@@ -32,11 +33,16 @@ export interface UserControllerContract {
     me: (
         req: Request<object, User, object, object, LoginUser>,
         res: Response<User, LoginUser>,
-		next: NextFunction
+        next: NextFunction
     ) => void;
     verify: (
         req: Request<object, { token: string }, VerifyDTO>,
         res: Response<{ token: string }>,
+        next: NextFunction
+    ) => void;
+    uploadAvatar: (
+        req: Request<object, { avatar: string }, object, object, LoginUser>,
+        res: Response<{ avatar: string }, LoginUser>,
         next: NextFunction
     ) => void;
 }

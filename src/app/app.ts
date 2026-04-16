@@ -3,6 +3,7 @@ import { env } from "../config/env";
 import { appRouter } from "./routes";
 import { errorHandlerMiddleware } from "../middlewares/errorHandler";
 import cors from "cors";
+import path from "path/win32";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(
 );
 
 app.use(express.json());
+app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 app.use(appRouter);
 app.use(errorHandlerMiddleware);
 
