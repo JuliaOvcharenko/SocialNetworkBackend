@@ -6,7 +6,7 @@ import { LoginError, ConflictError, NotFoundError, BadRequestError } from "../..
 import { UserServiceContract } from "./types/user.contracts";
 import { UserRepository } from "./user.repository";
 import { MailService } from "./mail.service";
-import { PrismaClient } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
 
 function generateCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
@@ -84,28 +84,16 @@ export const UserService: UserServiceContract = {
         return user;
     },
 
-    async uploadAvatar(userId: number, file?: Express.Multer.File) {
-        if (!file) {
-            throw new BadRequestError("No image file provided");
-        }
-
-        const avatarUrl = `/uploads/shakal/${file.filename}`;
-
-        // Снимаем флаг "главная аватарка" у всех текущих аватарок пользователя
-        await PrismaClient.userAvatar.updateMany({
-            where: { userId: userId },
-            data: { isMain: false }
-        });
-
-        // Создаем новую запись для аватарки и устанавливаем ее как главную
-        const newAvatar = await PrismaClient.userAvatar.create({
+    async updateProfile(userId: number, data: any) {
+        return await prisma.user.update({
+            where: { id: userId },
             data: {
-                userId: userId,
-                url: avatarUrl,
-                isMain: true
+                name: data.name,
+                surname: data.surname,
+                nickname: data.nickname,
+                authorAlias: data.authorAlias,
+                birthDate: data.birthDate
             }
         });
-
-        return { avatar: newAvatar.url };
     }
 };

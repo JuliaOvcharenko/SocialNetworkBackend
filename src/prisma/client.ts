@@ -4,6 +4,6 @@ import { env } from "../config/env";
 
 const adapter = new PrismaBetterSqlite3({ url: env.DATABASE_URL });
 
-export const PrismaClient = new PC({
+export const prisma = new PC({
     adapter,
 });

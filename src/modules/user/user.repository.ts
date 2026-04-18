@@ -1,13 +1,13 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { UserRepositoryContract } from "./types/user.contracts";
 import { InternalServerError } from "../../errors/app.errors";
-import { PrismaClient } from "../../prisma/client";
+import { prisma } from "../../prisma/client";
 
 
 export const UserRepository: UserRepositoryContract = {
     async findByEmailWithPassword(email) {
         try {
-            return await PrismaClient.user.findFirst({
+            return await prisma.user.findFirst({
                 where: { email },
             });
         } catch (error) {
@@ -17,7 +17,7 @@ export const UserRepository: UserRepositoryContract = {
 
     async findByEmail(email) {
         try {
-            return await PrismaClient.user.findFirst({
+            return await prisma.user.findFirst({
                 where: { email },
                 omit: { password: true },
             });
@@ -28,34 +28,29 @@ export const UserRepository: UserRepositoryContract = {
 
     async create(data) {
         try {
-            return await PrismaClient.user.create({ data });
+            return await prisma.user.create({ data });
         } catch (error) {
             throw handlePrismaError(error);
         }
     },
 
-    async findById(id) {
-        try {
-            // Получаем юзера с аватарками, включая пароль
-            const user = await PrismaClient.user.findFirstOrThrow({
-                where: { id },
-                include: { 
-                    avatars: true 
-                },
-            });
-
-            // Удаляем пароль из объекта юзера
-            const { password, ...userWithoutPassword } = user;
-
-            // Возвращаем юзера без пароля, но с аватарками
-            return userWithoutPassword;
-
-        } catch (error) {
-            throw handlePrismaError(error);
-        }
+    async findById(id: number) {
+        return await prisma.user.findUnique({
+            where: { id },
+            include: {
+                avatars: {
+                    where: { isShown: true },
+                    include: { image: true },
+                    orderBy: [
+                        { isActive: 'desc' },
+                        { id: 'desc' }
+                    ]
+                }
+            }
+        });
     },
     async verify(id: number) {
-        return PrismaClient.user.update({
+        return prisma.user.update({
             where: { id },
             data: { isVerified: true, verificationCode: null },
             omit: { password: true },
@@ -63,7 +58,7 @@ export const UserRepository: UserRepositoryContract = {
     },
     async findByIdWithPassword(id: number) {
         try {
-            return await PrismaClient.user.findFirstOrThrow({ where: { id } });
+            return await prisma.user.findFirstOrThrow({ where: { id } });
         } catch (error) {
             throw handlePrismaError(error);
         }

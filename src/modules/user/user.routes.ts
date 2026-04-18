@@ -31,8 +31,14 @@ UserRoutes.post(
 
 UserRoutes.post(
     "/avatar",
-    authenticateMiddleware, // проверяем токен
-    uploadMiddleware.single("avatar"), // загружаем файл с полем "avatar"
-    processImageMiddleware(300, 80), // обрабатываем изображение до 300x300 и сжимает до 80% качества
-    UserController.uploadAvatar // вызываем контроллер для сохранения информации об аватаре в базе данных
+    authenticateMiddleware, 
+    uploadMiddleware.single("avatar"), 
+    processImageMiddleware(300, 80), 
+    UserController.uploadAvatar 
+);
+
+UserRoutes.patch(
+    "/me", 
+    authenticateMiddleware, 
+    UserController.updateProfile 
 );

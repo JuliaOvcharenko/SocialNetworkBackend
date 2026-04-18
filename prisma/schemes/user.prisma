@@ -13,18 +13,6 @@ model User {
     createdAt        DateTime     @default(now())
     updatedAt        DateTime     @updatedAt
 
-    // у одного юзера может быть много аватарок 
-    avatars          UserAvatar[] 
+    avatars          Avatar[] 
 }
 
-// Новая таблица специально для истории аватарок
-model UserAvatar {
-    id        Int      @id @default(autoincrement())
-    url       String   // Ссылка на саму фотку
-    isMain    Boolean  @default(false) // главная ли это аватарка сейчас
-    createdAt DateTime @default(now()) // Когда была загружена
-    
-    // Связь с юзером
-    userId    Int
-    user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-}

@@ -6,8 +6,12 @@ import sharp from "sharp";
 import { originalFiles, shakalFiles } from "../config/path";
 
 
-export const uploadMiddleware = multer({ storage: memoryStorage() });
-
+export const uploadMiddleware = multer({
+	storage: memoryStorage(),
+	limits: {
+		fileSize: 20 * 1024 * 1024,
+	}
+});
 export function processImageMiddleware(width: number, quality: number = 80) {
 	return async function (req: Request, res: Response, next: NextFunction) {
 		try {
@@ -21,12 +25,12 @@ export function processImageMiddleware(width: number, quality: number = 80) {
 			const shakalFilePath = join(shakalFiles, filename);
 
 			await sharp(file.buffer)
-				.jpeg({ quality: 100 })
+				.jpeg({ quality: 100, mozjpeg: true }) 
 				.toFile(originalFilePath);
 
 			await sharp(file.buffer)
+				.resize(width) 
 				.jpeg({ quality })
-				.resize({ width })
 				.toFile(shakalFilePath);
 			file.filename = filename;
 
