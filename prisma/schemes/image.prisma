@@ -1,14 +1,11 @@
 model Image {
-  id             Int      @id @default(autoincrement())
+  id             Int           @id @default(autoincrement())
   pathname       String?
-  uploaded_at    DateTime @default(now())
-  
+  uploaded_at    DateTime      @default(now())
   shakalImageURL String?
   normalImageURL String?
-
   postId         Int?
   albumId        Int?
-
-
   avatars        Avatar[]
+  albumImages    AlbumImages[]
 }

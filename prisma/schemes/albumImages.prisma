@@ -1,0 +1,7 @@
+model AlbumImages {
+  id      Int   @id @default(autoincrement())
+  imageId Int
+  albumId Int
+  image   Image @relation(fields: [imageId], references: [id])
+  album   Album @relation(fields: [albumId], references: [id])
+}
