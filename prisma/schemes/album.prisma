@@ -1,10 +1,22 @@
+enum AlbumVisibility {
+  public
+  private
+}
+
+enum AlbumType {
+  system
+  custom
+}
+
 model Album {
-  id         Int           @id @default(autoincrement())
+  id         Int             @id @default(autoincrement())
   name       String
-  topic      String?
-  year       String?
-  isShown    Boolean       @default(false)
-  created_at DateTime      @default(now())
+  tag        String?
+  year       Int?
+  visibility AlbumVisibility @default(private)
+  type       AlbumType       @default(custom)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
   tags       AlbumTags[]
   images     AlbumImages[]
   user       User          @relation(fields: [userId], references: [id])

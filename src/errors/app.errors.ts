@@ -43,3 +43,9 @@ export class InternalServerError extends AppErrors {
 		super(message, 500);
 	}
 }
+
+export class ForbiddenError extends AppErrors {
+	constructor(message: string = "Access Denied: You don't have editing permissions. Try logging in again or checking your file permissions.") {
+		super(message, 403);
+	}
+}
