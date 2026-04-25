@@ -3,6 +3,6 @@ model AlbumImages {
   imageId    Int
   albumId    Int
   visibility AlbumVisibility @default(private) 
-  image      Image @relation(fields: [imageId], references: [id])
-  album      Album @relation(fields: [albumId], references: [id])
+  image      Image @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  album      Album @relation(fields: [albumId], references: [id], onDelete: Cascade)
 }

@@ -1,0 +1,7 @@
+model AlbumAvatars {
+  id       Int    @id @default(autoincrement())
+  avatarId Int
+  albumId  Int
+  avatar   Avatar @relation(fields: [avatarId], references: [id], onDelete: Cascade)
+  album    Album  @relation(fields: [albumId], references: [id], onDelete: Cascade)
+}

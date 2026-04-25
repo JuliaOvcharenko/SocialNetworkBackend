@@ -1,54 +1,75 @@
-import { prisma } from "../../prisma/client";
+import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
+import { InternalServerError, NotFoundError } from "../../errors/app.errors";
 import { AlbumRepositoryContract } from "./types/album.contracts";
-import { Album, CreateAlbum, UpdateAlbum, UpdateAlbumVisibility } from "./types/album.types";
+import { prisma } from "../../prisma/client";
+import { Album } from "./types/album.types";
+
+
+function handlePrismaError(error: unknown): Error {
+    if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+            return new NotFoundError("Album");
+        }
+        return new InternalServerError(`DB_ERROR: ${error.code}`);
+    }
+    return new InternalServerError();
+}
 
 export const AlbumRepository: AlbumRepositoryContract = {
-
-    async create(userId: number, data: CreateAlbum): Promise<Album> {
-        const createAlbum = await prisma.album.create({
-            data: {
-                ...data,
-                userId,
-                type: "custom",
-            },
-        });
-        return createAlbum;
+    async create(userId, data) {
+        try {
+            return await prisma.album.create({
+                data: { ...data, userId, type: "custom" },
+            });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
     },
 
-    async edit(id: number, data: UpdateAlbum): Promise<Album> {
-        const editAlbum = await prisma.album.update({
-            where: { id },
-            data,
-        });
-        return editAlbum;
+    async edit(id, data) {
+        try {
+            return await prisma.album.update({ where: { id }, data });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
     },
 
-    async editVisibility(id: number, data: UpdateAlbumVisibility): Promise<Album> {
-        const editAlbumVisibility = await prisma.album.update({
-            where: { id },
-            data,
-        });
-        return editAlbumVisibility;
+    async editVisibility(id, data) {
+        try {
+            return await prisma.album.update({ where: { id }, data });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
     },
 
     async getAll(userId: number): Promise<Album[]> {
         const albums = await prisma.album.findMany({
             where: { userId },
+            include: {
+                images: {
+                    include: { image: true }
+                },
+                avatars: {
+                    include: { avatar: { include: { image: true } } }
+                },
+            },
         });
         return albums;
     },
 
-    async delete(id: number): Promise<void> {
-        await prisma.album.delete({
-            where: { id },
-        });
+    async delete(id) {
+        try {
+            await prisma.album.delete({ where: { id } });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
     },
 
-    async findById(id: number): Promise<Album | null> {
-        const album = await prisma.album.findUnique({
-            where: { id },
-        });
-        return album;
+    async findById(id) {
+        try {
+            return await prisma.album.findUnique({ where: { id } });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
     },
-
 };

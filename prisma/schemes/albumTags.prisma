@@ -2,6 +2,6 @@ model AlbumTags {
   id       Int   @id @default(autoincrement())
   album_id Int
   tag_id   Int
-  album    Album @relation(fields: [album_id], references: [id])
-  tag      Tag   @relation(fields: [tag_id], references: [id])
+  album    Album @relation(fields: [album_id], references: [id], onDelete: Cascade)
+  tag      Tag   @relation(fields: [tag_id], references: [id], onDelete: Cascade)
 }

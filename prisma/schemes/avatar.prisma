@@ -3,7 +3,8 @@ model Avatar {
   isShown  Boolean @default(true)
   isActive Boolean @default(false)
   userId   Int
-  user     User    @relation(fields: [userId], references: [id])
+  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   imageId  Int
-  image    Image   @relation(fields: [imageId], references: [id])
+  image    Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  albumAvatars AlbumAvatars[]
 }

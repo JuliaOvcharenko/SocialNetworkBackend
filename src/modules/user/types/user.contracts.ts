@@ -16,7 +16,7 @@ export interface UserServiceContract {
     login: (credentials: LoginCredentials) => Promise<{ token: string }>;
     register: (credentials: RegisterCredentials) => Promise<{ message: string; token: string }>;
     me: (dto: MeDTO) => Promise<User>;
-    verify: (dto: VerifyDTO, userId: number) => Promise<{ token: string }>;
+    verify: (dto: VerifyDTO, userId: number) => Promise<{ token: string; user: UserWithAvatars | null }>;
     updateProfile: (userId: number, data: Partial<User>) => Promise<User>;
 }
 
