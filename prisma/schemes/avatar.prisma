@@ -1,10 +1,10 @@
 model Avatar {
-  id       Int     @id @default(autoincrement())
-  isShown  Boolean @default(true)
-  isActive Boolean @default(false)
-  userId   Int
-  user     User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  imageId  Int
-  image    Image   @relation(fields: [imageId], references: [id], onDelete: Cascade)
+  id           Int            @id @default(autoincrement())
+  isShown      Boolean        @default(true)
+  isActive     Boolean        @default(false)
+  userId       Int
+  user         User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imageId      Int
+  image        Image          @relation(fields: [imageId], references: [id], onDelete: Cascade)
   albumAvatars AlbumAvatars[]
 }

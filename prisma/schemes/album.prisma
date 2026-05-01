@@ -19,7 +19,7 @@ model Album {
   updatedAt  DateTime        @updatedAt
   tags       AlbumTags[]
   images     AlbumImages[]
-  user       User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user       User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId     Int
-  avatars     AlbumAvatars[]
+  avatars    AlbumAvatars[]
 }
