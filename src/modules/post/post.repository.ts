@@ -3,6 +3,7 @@ import { InternalServerError, NotFoundError } from "../../errors/app.errors";
 import { prisma } from "../../prisma/client";
 import { PostRepositoryContract } from "./types/post.contract";
 import { Post } from "./types/post.types";
+import { Prisma } from "../../../generated/prisma/client";
 
 function getPostInclude() {
     return {
@@ -72,7 +73,18 @@ export const PostRepository: PostRepositoryContract = {
         return { posts: posts.map(mapPost), total };
     },
 
-    async upsertTags(tagNames: string[]): Promise<number[]> {
+    async findById(postId) {
+        const post = await prisma.post.findUnique({
+            where: { id: postId },
+            include: getPostInclude(),
+        });
+
+        if (!post) throw new NotFoundError("Post");
+
+        return mapPost(post) as Post;
+    },
+
+    async upsertTags(tagNames) {
         const ids: number[] = [];
         for (const tagName of tagNames) {
             const name = tagName.replace(/^#/, "").trim();
@@ -108,14 +120,81 @@ export const PostRepository: PostRepositoryContract = {
             throw handlePrismaError(error);
         }
     },
+
+    async update(postId, dto) {
+        try {
+            const data: Prisma.PostUpdateInput = {};
+
+            if (dto.title) {
+                data.title = dto.title;
+            }
+
+            if (dto.content) {
+                data.content = dto.content;
+            }
+
+            if (dto.topic) {
+                data.topic = dto.topic;
+            }
+
+            if (dto.tagIds) {
+                data.tags = { deleteMany: {}, create: dto.tagIds.map((tag_id) => ({ tag_id })) };
+            }
+
+            if (dto.imageUrls) {
+                data.images = {
+                    deleteMany: {},
+                    create: dto.imageUrls.map((shakalImageURL) => ({ shakalImageURL })),
+                };
+            }
+
+            if (dto.links) {
+                data.links = { deleteMany: {}, create: dto.links };
+            }
+
+            if (dto.tagIds) {
+                data.tags = { deleteMany: {}, create: dto.tagIds.map((tag_id) => ({ tag_id })) };
+            }
+
+            if (dto.imageUrls) {
+                data.images = {
+                    deleteMany: {},
+                    create: dto.imageUrls.map((shakalImageURL) => ({ shakalImageURL })),
+                };
+            }
+
+            if (dto.links) {
+                data.links = { deleteMany: {}, create: dto.links };
+            }
+
+            const post = await prisma.post.update({
+                where: { id: postId },
+                data,
+                include: getPostInclude(),
+            });
+
+            return mapPost(post) as Post;
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
+    },
+    async delete(postId) {
+        try {
+            await prisma.post.delete({ where: { id: postId } });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
+    },
 };
 
 function handlePrismaError(error: unknown): Error {
     if (error instanceof PrismaClientKnownRequestError) {
-        console.log('Prisma error meta:', error.meta);
+        console.log("Prisma error meta:", error.meta);
         if (error.code === "P2025") return new NotFoundError("Post");
-        if (error.code === "P2002") return new InternalServerError(`Duplicate: ${JSON.stringify(error.meta?.target)}`);
+        if (error.code === "P2002")
+            return new InternalServerError(`Duplicate: ${JSON.stringify(error.meta?.target)}`);
         return new InternalServerError(`DB_ERROR: ${error.code}`);
     }
+    console.log(error);
     return new InternalServerError();
 }

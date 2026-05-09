@@ -29,12 +29,38 @@ export const PostController: PostControllerContract = {
         }
     },
 
+    async updatePost(req, res, next) {
+        try {
+            const post = await PostService.updatePost(
+                res.locals.userId,
+                +req.params.postId,
+                req.body,
+            );
+            res.json(post);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    async deletePost(req, res, next) {
+        try {
+            const result = await PostService.deletePost(
+                res.locals.userId,
+                Number(req.params.postId),
+            );
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
+
     async uploadImage(req, res, next) {
         try {
             if (!req.file) {
                 res.status(400).json({ message: "No file uploaded" } as any);
                 return;
             }
+
             const imageUrl = `/media/shakal/${req.file.filename}`;
             res.json({ url: imageUrl });
         } catch (error) {

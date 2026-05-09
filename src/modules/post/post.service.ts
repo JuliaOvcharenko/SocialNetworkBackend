@@ -1,6 +1,7 @@
+import { ForbiddenError } from "../../errors/app.errors";
 import { PostRepository } from "./post.repository";
 import { PostServiceContract } from "./types/post.contract";
-import { PaginationQuery } from "./types/post.types";
+import { PaginationQuery, Post } from "./types/post.types";
 
 const DEFAULT_LIMIT = 5;
 
@@ -33,8 +34,39 @@ export const PostService: PostServiceContract = {
     },
 
     async createPost(userId, dto) {
-        const tagIds = dto.tags?.length ? await PostRepository.upsertTags(dto.tags) : [];
+        let tagIds: number[] = [];
+
+        if (dto.tags && dto.tags.length) {
+            tagIds = await PostRepository.upsertTags(dto.tags);
+        }
 
         return PostRepository.create(userId, { ...dto, tagIds });
+    },
+
+    async updatePost(userId, postId, dto) {
+        const post = (await PostRepository.findById(postId)) as Post;
+
+        if (post.author.id !== userId) {
+            throw new ForbiddenError();
+        }
+
+        if (dto.tags && dto.tags.length) {
+            const tagIds = await PostRepository.upsertTags(dto.tags);
+            return PostRepository.update(postId, { ...dto, tagIds });
+        }
+
+        return PostRepository.update(postId, dto);
+    },
+
+    async deletePost(userId, postId) {
+        const post = (await PostRepository.findById(postId)) as Post;
+
+        if (post.author.id !== userId) {
+            throw new ForbiddenError();
+        }
+
+        await PostRepository.delete(postId);
+
+        return { success: true };
     },
 };

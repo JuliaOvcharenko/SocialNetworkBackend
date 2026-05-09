@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { createPostSchema } from "./post.schema";
+import { createPostSchema, updatePostSchema } from "./post.schema";
 import { validateMiddleware } from "../../middlewares/validate.middleware";
 import { authenticateMiddleware } from "../../middlewares/authenticate.middleware";
 import { PostController } from "./post.controller";
@@ -26,3 +26,15 @@ PostRoutes.post(
     PostController.createPost,
 );
 
+PostRoutes.patch(
+    "/:postId",
+    authenticateMiddleware,
+    validateMiddleware(updatePostSchema),
+    PostController.updatePost,
+);
+
+PostRoutes.delete(
+    "/:postId",
+    authenticateMiddleware,
+    PostController.deletePost,
+);

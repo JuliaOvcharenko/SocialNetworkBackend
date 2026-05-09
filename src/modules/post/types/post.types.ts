@@ -39,3 +39,17 @@ export interface PaginatedPosts {
         totalPages: number;
     };
 }
+
+export interface UpdatePostDTO {
+    title?: string;
+    content?: string;
+    topic?: string;
+    tags?: string[];
+    tagIds?: number[];
+    imageUrls?: string[];
+    links?: { url: string; label?: string }[];
+}
+
+export interface DeletePostResult {
+    success: boolean;
+}

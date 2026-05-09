@@ -14,3 +14,8 @@ export const createPostSchema = object({
         })
     ).optional().default([]),
 });
+
+export const updatePostSchema = createPostSchema.shape({
+    title: string().optional(),
+    content: string().optional(),
+});
