@@ -2,4 +2,5 @@ model Tag {
   id         Int         @id @default(autoincrement())
   name       String      @unique
   album_tags AlbumTags[]
+  postTags   PostTags[]
 }

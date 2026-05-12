@@ -34,7 +34,6 @@ export const UserService: UserServiceContract = {
 
         return { token };
     },
-
     async register(credentials) {
         const existingUser = await UserRepository.findByEmail(credentials.email);
         if (existingUser) {
@@ -48,6 +47,15 @@ export const UserService: UserServiceContract = {
             ...credentials,
             password: hashedPassword,
             verificationCode: code,
+        });
+
+        await prisma.album.create({
+            data: {
+                name: "Avatars",
+                visibility: "private",
+                type: "system",
+                userId: user.id,
+            },
         });
 
         await MailService.sendVerificationCode(credentials.email, code);
@@ -72,7 +80,9 @@ export const UserService: UserServiceContract = {
             expiresIn: env.TOKEN_TTL as StringValue,
         });
 
-        return { token };
+        const updatedUser = await UserRepository.findById(userId);
+
+        return { token, user: updatedUser };
     },
 
     async me(dto) {

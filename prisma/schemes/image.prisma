@@ -8,4 +8,5 @@ model Image {
   albumId        Int?
   avatars        Avatar[]
   albumImages    AlbumImages[]
+  post           Post?         @relation(fields: [postId], references: [id])
 }

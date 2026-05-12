@@ -1,4 +1,5 @@
 import { prisma } from "../../prisma/client";
+import { NotFoundError } from "../../errors/app.errors";
 
 export const AvatarService = {
 
@@ -26,15 +27,22 @@ export const AvatarService = {
             return { avatar: updatedImage.shakalImageURL };
 
         } catch (error) {
-            throw error; 
+            throw error;
         }
     },
-
 
     async uploadAvatar(userId: number, file: any, isMain: boolean = true) {
         const avatarUrl = `/media/shakal/${file.filename}`;
 
         return await prisma.$transaction(async (tx) => {
+            const systemAlbum = await tx.album.findFirst({
+                where: { userId, type: "system" }
+            });
+
+            if (!systemAlbum) {
+                throw new NotFoundError("System album");
+            }
+
             if (isMain) {
                 await tx.avatar.updateMany({
                     where: { userId },
@@ -50,15 +58,24 @@ export const AvatarService = {
                 }
             });
 
-            return await tx.avatar.create({
+            const newAvatar = await tx.avatar.create({
                 data: {
                     userId,
                     imageId: newImage.id,
                     isActive: isMain,
-                    isShown: true
+                    isShown: true,
                 },
                 include: { image: true }
             });
+
+            await tx.albumAvatars.create({
+                data: {
+                    avatarId: newAvatar.id,
+                    albumId: systemAlbum.id,
+                }
+            });
+
+            return newAvatar;
         });
     }
 };

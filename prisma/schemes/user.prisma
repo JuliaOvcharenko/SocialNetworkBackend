@@ -1,18 +1,23 @@
 model User {
-  id               Int       @id @default(autoincrement())
+  id               Int          @id @default(autoincrement())
   name             String?
   surname          String?
-  nickname         String?   @unique
+  nickname         String?      @unique
   authorAlias      String?
-  email            String    @unique
+  email            String       @unique
   birthDate        DateTime?
   password         String
   signature        String?
-  isVerified       Boolean?  @default(false)
+  isVerified       Boolean?     @default(false)
   verificationCode String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
 
-  avatars Avatar[]
-  album   Album[]
+  avatars          Avatar[]
+  album            Album[]
+  posts            Post[]
+  postStatuses     PostStatus[]
+  
+  sentRequests     Friendship[] @relation("SentRequests")
+  receivedRequests Friendship[] @relation("ReceivedRequests")
 }

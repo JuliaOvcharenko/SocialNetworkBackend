@@ -1,0 +1,8 @@
+model PostStatus {
+  id      Int     @id @default(autoincrement())
+  post_id Int
+  user_id Int
+  post    Post    @relation(fields: [post_id], references: [id], onDelete: Cascade)
+  user    User    @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  isLiked Boolean
+}

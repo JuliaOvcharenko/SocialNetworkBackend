@@ -1,0 +1,18 @@
+model Post {
+  id           Int      @id @default(autoincrement())
+  title        String
+  content      String
+  topic        String?
+  heartedLikes Int      @default(0)
+  likes        Int      @default(0)
+  views        Int      @default(0)
+  authorId     Int
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  author     User         @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  images     Image[]
+  tags       PostTags[]
+  links      Link[]
+  postStatus PostStatus[]
+}

@@ -1,6 +1,6 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { UserRepositoryContract } from "./types/user.contracts";
-import { InternalServerError } from "../../errors/app.errors";
+import { InternalServerError, NotFoundError } from "../../errors/app.errors";
 import { prisma } from "../../prisma/client";
 
 
@@ -35,7 +35,7 @@ export const UserRepository: UserRepositoryContract = {
     },
 
     async findById(id: number) {
-        return await prisma.user.findUnique({
+        const findedUser = await prisma.user.findUnique({
             where: { id },
             include: {
                 avatars: {
@@ -45,9 +45,20 @@ export const UserRepository: UserRepositoryContract = {
                         { isActive: 'desc' },
                         { id: 'desc' }
                     ]
+                },
+                album: {
+                    include: {
+                        images: {
+                            include: { image: true }
+                        },
+                        avatars: {
+                            include: { avatar: { include: { image: true } } }
+                        },
+                    }
                 }
             }
         });
+        return findedUser
     },
     async verify(id: number) {
         return prisma.user.update({
@@ -67,6 +78,9 @@ export const UserRepository: UserRepositoryContract = {
 
 function handlePrismaError(error: unknown): Error {
     if (error instanceof PrismaClientKnownRequestError) {
+        if (error.code === "P2025") {
+            return new NotFoundError("Album");
+        }
         return new InternalServerError(`DB_ERROR: ${error.code}`);
     }
     return new InternalServerError();
