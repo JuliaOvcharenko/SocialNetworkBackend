@@ -1,15 +1,18 @@
+import { Friendship, User } from "../../../generated/prisma/client";
 import { prisma } from "../../prisma/client";
+import { FriendsRepositoryContract } from "./types/friends.contracts";
+import { FriendshipWithProfile } from "./types/friends.types";
 
-export const FriendsRepository = {
-    getPendingRequests(userId: number) {
-        return prisma.friendship.findMany({
+export const FriendsRepository: FriendsRepositoryContract = {
+    async getPendingRequests(userId: number): Promise<FriendshipWithProfile[]> {
+        return await prisma.friendship.findMany({
             where: { to_profile: userId, status: "pending" },
             include: { fromProfileRel: true },
         });
     },
 
-    getSuggestions(userId: number, limit: number = 2) {
-        return prisma.user.findMany({
+    async getSuggestions(userId: number, limit: number = 2): Promise<User[]> {
+        return await prisma.user.findMany({
             where: {
                 id: { not: userId },
                 sentRequests: { none: { to_profile: userId } },
@@ -19,8 +22,8 @@ export const FriendsRepository = {
         });
     },
 
-    getAcceptedFriends(userId: number) {
-        return prisma.friendship.findMany({
+    async getAcceptedFriends(userId: number): Promise<FriendshipWithProfile[]> {
+        return await prisma.friendship.findMany({
             where: {
                 OR: [{ from_profile: userId }, { to_profile: userId }],
                 status: "accepted",
@@ -32,8 +35,8 @@ export const FriendsRepository = {
         });
     },
 
-    createFriendship(fromUserId: number, toUserId: number, status: string = "pending") {
-        return prisma.friendship.create({
+    async createFriendship(fromUserId: number, toUserId: number, status: string = "pending"): Promise<Friendship> {
+        return await prisma.friendship.create({
             data: {
                 from_profile: fromUserId,
                 to_profile: toUserId,
@@ -42,15 +45,15 @@ export const FriendsRepository = {
         });
     },
 
-    updateFriendshipStatus(id: number, status: string) {
-        return prisma.friendship.update({
+    async updateFriendshipStatus(id: number, status: string): Promise<Friendship> {
+        return await prisma.friendship.update({
             where: { id },
             data: { status },
         });
     },
 
-    deleteFriendship(id: number) {
-        return prisma.friendship.delete({
+    async deleteFriendship(id: number): Promise<Friendship> {
+        return await prisma.friendship.delete({
             where: { id },
         });
     },
