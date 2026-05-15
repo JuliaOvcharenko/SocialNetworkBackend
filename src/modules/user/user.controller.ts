@@ -45,14 +45,14 @@ export const UserController: UserControllerContract = {
             const userId = res.locals.userId;
             const file = req.file;
             const rawAvatarId = req.body.avatarId;
-            const avatarId = (rawAvatarId && rawAvatarId !== 'undefined') ? Number(rawAvatarId) : null;
-
+            const avatarId =
+                rawAvatarId && rawAvatarId !== "undefined" ? Number(rawAvatarId) : null;
 
             if (!file) {
                 return res.status(400).json({ status: "error", message: "Файл не получен" });
             }
 
-            res.setHeader('Connection', 'close');
+            res.setHeader("Connection", "close");
 
             if (avatarId) {
                 const result = await AvatarService.replaceAvatar(userId, avatarId, file);
@@ -66,7 +66,6 @@ export const UserController: UserControllerContract = {
         }
     },
 
-
     async updateProfile(req, res, next) {
         try {
             const result = await UserService.updateProfile(res.locals.userId, req.body);
@@ -74,5 +73,28 @@ export const UserController: UserControllerContract = {
         } catch (error) {
             next(error);
         }
-    }
+    },
+
+    async logout(req, res, next) {
+        try {
+            const token = req.headers.authorization?.split(" ")[1];
+            if (!token) {
+                res.status(400).json({ message: "No token provided" });
+                return;
+            }
+            const result = await UserService.logout(token);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    getById: async (req, res, next) => {
+        try {
+            const user = await UserService.getById(Number(req.params.id));
+            res.json(user);
+        } catch (error) {
+            next(error);
+        }
+    },
 };

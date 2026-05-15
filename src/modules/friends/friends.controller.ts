@@ -9,7 +9,7 @@ export const friendsController: FriendsControllerContract = {
     async getRequests(
         req: Request<object, FriendshipWithProfile[], object, object, LoginUser>,
         res: Response<FriendshipWithProfile[], LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
             const result = await FriendsService.getRequests(res.locals.userId);
@@ -22,7 +22,7 @@ export const friendsController: FriendsControllerContract = {
     async getSuggestions(
         req: Request<object, User[], object, object, LoginUser>,
         res: Response<User[], LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
             const result = await FriendsService.getSuggestions(res.locals.userId);
@@ -35,7 +35,7 @@ export const friendsController: FriendsControllerContract = {
     async getAllFriends(
         req: Request<object, FriendshipWithProfile[], object, object, LoginUser>,
         res: Response<FriendshipWithProfile[], LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
             const result = await FriendsService.getAllFriends(res.locals.userId);
@@ -48,7 +48,7 @@ export const friendsController: FriendsControllerContract = {
     async getOverview(
         req: Request<object, FriendsOverview, object, object, LoginUser>,
         res: Response<FriendsOverview, LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
             const result = await FriendsService.getOverview(res.locals.userId);
@@ -61,10 +61,13 @@ export const friendsController: FriendsControllerContract = {
     async sendRequest(
         req: Request<object, Friendship, { targetUserId: number }, object, LoginUser>,
         res: Response<Friendship, LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
-            const result = await FriendsService.sendRequest(res.locals.userId, Number(req.body.targetUserId));
+            const result = await FriendsService.sendRequest(
+                res.locals.userId,
+                Number(req.body.targetUserId),
+            );
             res.status(201).json(result);
         } catch (error) {
             next(error);
@@ -72,13 +75,31 @@ export const friendsController: FriendsControllerContract = {
     },
 
     async acceptAction(
-        req: Request<{ id: string }, { message: string; data: Friendship }, object, { type?: string }, LoginUser>,
+        req: Request<
+            { id: string },
+            { message: string; data: Friendship },
+            object,
+            { type?: string },
+            LoginUser
+        >,
         res: Response<{ message: string; data: Friendship }, LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
             const { id } = req.params;
             const { type } = req.query;
+
+            console.log('acceptAction params:', { id, type, parsedId: Number(id) }); 
+
+            const allowedTypes = ["request", "suggestion"];
+
+            if (!type || !allowedTypes.includes(type)) {
+                res.status(400).json({
+                    message: `Invalid type. Allowed: ${allowedTypes.join(", ")}`,
+                } as any);
+                return;
+            }
+
             const result = await FriendsService.acceptAction(res.locals.userId, Number(id), type);
             res.json(result);
         } catch (error) {
@@ -89,7 +110,7 @@ export const friendsController: FriendsControllerContract = {
     async deleteAction(
         req: Request<{ id: string }, { message: string }, object, { type?: string }, LoginUser>,
         res: Response<{ message: string }, LoginUser>,
-        next: NextFunction
+        next: NextFunction,
     ) {
         try {
             const { id } = req.params;
@@ -100,5 +121,5 @@ export const friendsController: FriendsControllerContract = {
         } catch (error) {
             next(error);
         }
-    }
+    },
 };

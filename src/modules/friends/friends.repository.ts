@@ -3,11 +3,23 @@ import { prisma } from "../../prisma/client";
 import { FriendsRepositoryContract } from "./types/friends.contracts";
 import { FriendshipWithProfile } from "./types/friends.types";
 
+const avatarInclude = {
+    avatars: {
+        where: { isActive: true },
+        include: { image: true },
+        take: 1,
+    },
+};
+
 export const FriendsRepository: FriendsRepositoryContract = {
     async getPendingRequests(userId: number): Promise<FriendshipWithProfile[]> {
         return await prisma.friendship.findMany({
             where: { to_profile: userId, status: "pending" },
-            include: { fromProfileRel: true },
+            include: {
+                fromProfileRel: {
+                    include: avatarInclude,
+                },
+            },
         });
     },
 
@@ -18,6 +30,7 @@ export const FriendsRepository: FriendsRepositoryContract = {
                 sentRequests: { none: { to_profile: userId } },
                 receivedRequests: { none: { from_profile: userId } },
             },
+            include: avatarInclude,
             take: limit,
         });
     },
@@ -29,8 +42,12 @@ export const FriendsRepository: FriendsRepositoryContract = {
                 status: "accepted",
             },
             include: {
-                fromProfileRel: true,
-                toProfileRel: true,
+                fromProfileRel: {
+                    include: avatarInclude,
+                },
+                toProfileRel: {
+                    include: avatarInclude,
+                },
             },
         });
     },

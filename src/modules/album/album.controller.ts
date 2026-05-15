@@ -36,7 +36,7 @@ export const AlbumController: AlbumControllerContract = {
 
     async getAll(req, res, next) {
         try {
-            const userId = res.locals.userId;
+            const userId = req.query.userId ? Number(req.query.userId) : res.locals.userId;
             const albums = await AlbumService.getAll(userId);
             res.json(albums);
         } catch (error) {

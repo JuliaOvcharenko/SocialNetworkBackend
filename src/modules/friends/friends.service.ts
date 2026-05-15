@@ -3,6 +3,8 @@ import { FriendsRepository } from "./friends.repository";
 import { FriendsServiceContract } from "./types/friends.contracts";
 import { FriendsOverview, FriendshipWithProfile } from "./types/friends.types";
 
+
+
 export const FriendsService: FriendsServiceContract = {
     async getRequests(userId: number): Promise<FriendshipWithProfile[]> {
         return await FriendsRepository.getPendingRequests(userId);

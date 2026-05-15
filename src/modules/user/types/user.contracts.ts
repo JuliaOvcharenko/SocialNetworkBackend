@@ -16,8 +16,14 @@ export interface UserServiceContract {
     login: (credentials: LoginCredentials) => Promise<{ token: string }>;
     register: (credentials: RegisterCredentials) => Promise<{ message: string; token: string }>;
     me: (dto: MeDTO) => Promise<User>;
-    verify: (dto: VerifyDTO, userId: number) => Promise<{ token: string; user: UserWithAvatars | null }>;
+    verify: (
+        dto: VerifyDTO,
+        userId: number,
+    ) => Promise<{ token: string; user: UserWithAvatars | null }>;
     updateProfile: (userId: number, data: Partial<User>) => Promise<User>;
+    logout: (token: string) => Promise<{ message: string }>;
+    isTokenBlacklisted: (token: string) => boolean;
+    getById: (userId: number) => Promise<UserWithAvatars>;
 }
 
 export type UserWithAvatars = User & {
@@ -63,6 +69,16 @@ export interface UserControllerContract {
     updateProfile: (
         req: Request<object, User, Partial<User>, object, LoginUser>,
         res: Response<User, LoginUser>,
+        next: NextFunction,
+    ) => void;
+    logout: (
+        req: Request<object, { message: string }, object, object, LoginUser>,
+        res: Response<{ message: string }, LoginUser>,
+        next: NextFunction,
+    ) => void;
+    getById: (
+        req: Request<{ id: string }, UserWithAvatars, object, object, LoginUser>,
+        res: Response<UserWithAvatars, LoginUser>,
         next: NextFunction,
     ) => void;
 }

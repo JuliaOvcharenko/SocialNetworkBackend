@@ -74,6 +74,7 @@ export const UserRepository: UserRepositoryContract = {
             throw handlePrismaError(error);
         }
     },
+    
 };
 
 function handlePrismaError(error: unknown): Error {
