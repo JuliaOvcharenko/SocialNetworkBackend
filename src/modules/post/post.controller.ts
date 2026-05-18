@@ -67,4 +67,13 @@ export const PostController: PostControllerContract = {
             next(error);
         }
     },
+
+    async getUserPosts(req, res, next) {
+        try {
+            const result = await PostService.getUserPosts(Number(req.params.userId), req.query);
+            res.json(result);
+        } catch (error) {
+            next(error);
+        }
+    },
 };

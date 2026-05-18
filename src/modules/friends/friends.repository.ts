@@ -29,6 +29,24 @@ export const FriendsRepository: FriendsRepositoryContract = {
                 id: { not: userId },
                 sentRequests: { none: { to_profile: userId } },
                 receivedRequests: { none: { from_profile: userId } },
+                AND: [
+                    {
+                        sentRequests: {
+                            none: {
+                                to_profile: userId,
+                                status: "accepted",
+                            },
+                        },
+                    },
+                    {
+                        receivedRequests: {
+                            none: {
+                                from_profile: userId,
+                                status: "accepted",
+                            },
+                        },
+                    },
+                ],
             },
             include: avatarInclude,
             take: limit,
@@ -52,7 +70,11 @@ export const FriendsRepository: FriendsRepositoryContract = {
         });
     },
 
-    async createFriendship(fromUserId: number, toUserId: number, status: string = "pending"): Promise<Friendship> {
+    async createFriendship(
+        fromUserId: number,
+        toUserId: number,
+        status: string = "pending",
+    ): Promise<Friendship> {
         return await prisma.friendship.create({
             data: {
                 from_profile: fromUserId,
