@@ -20,6 +20,8 @@ UserRoutes.post(
 );
 
 UserRoutes.get("/me", authenticateMiddleware, UserController.me);
+UserRoutes.get("/:id", authenticateMiddleware, UserController.getById);
+
 
 UserRoutes.post(
     "/verify",
@@ -27,6 +29,8 @@ UserRoutes.post(
     validateMiddleware(verifySchema),
     UserController.verify,
 );
+
+UserRoutes.post("/logout", authenticateMiddleware, UserController.logout);
 
 
 UserRoutes.post(

@@ -69,4 +69,14 @@ export const PostService: PostServiceContract = {
 
         return { success: true };
     },
+
+    async getUserPosts(userId, query) {
+        const { page, limit } = normalizePagination(query);
+        const { posts, total } = await PostRepository.findByAuthorPaginated(userId, page, limit);
+
+        return {
+            data: posts,
+            meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+        };
+    },
 };

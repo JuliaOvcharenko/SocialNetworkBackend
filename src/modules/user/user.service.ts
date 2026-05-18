@@ -3,7 +3,7 @@ import { compare, hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
 import { LoginError, ConflictError, NotFoundError, BadRequestError } from "../../errors/app.errors";
-import { UserServiceContract } from "./types/user.contracts";
+import { UserServiceContract, UserWithAvatars } from "./types/user.contracts";
 import { UserRepository } from "./user.repository";
 import { MailService } from "./mail.service";
 import { prisma } from "../../prisma/client";
@@ -11,6 +11,8 @@ import { prisma } from "../../prisma/client";
 function generateCode(): string {
     return Math.floor(100000 + Math.random() * 900000).toString();
 }
+
+const blacklistedTokens = new Set<string>();
 
 export const UserService: UserServiceContract = {
     async login(credentials) {
@@ -95,15 +97,40 @@ export const UserService: UserServiceContract = {
     },
 
     async updateProfile(userId: number, data: any) {
+        if (data.birthDate) {
+            const [day, month, year] = data.birthDate.split(".");
+            data.birthDate = new Date(`${year}-${month}-${day}`).toISOString();
+        }
+
+        if (data.nickname) {
+            const existing = await prisma.user.findUnique({
+                where: { nickname: data.nickname },
+            });
+            if (existing && existing.id !== userId) {
+                throw new Error("Nickname is already taken");
+            }
+        }
+
         return await prisma.user.update({
             where: { id: userId },
-            data: {
-                name: data.name,
-                surname: data.surname,
-                nickname: data.nickname,
-                authorAlias: data.authorAlias,
-                birthDate: data.birthDate
-            }
+            data,
         });
-    }
+    },
+
+    logout: async (token: string): Promise<{ message: string }> => {
+        blacklistedTokens.add(token);
+        return { message: "Logged out successfully" };
+    },
+
+    isTokenBlacklisted: (token: string): boolean => {
+        return blacklistedTokens.has(token);
+    },
+
+    getById: async (userId: number): Promise<UserWithAvatars> => {
+        const user = await UserRepository.findById(userId);
+        if (!user) {
+            throw new Error("User not found");
+        }
+        return user;
+    },
 };

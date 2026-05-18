@@ -21,3 +21,7 @@ export interface LoginUser {
 export type VerifyDTO = {
     code: string;
 };
+
+export interface LogoutDTO {
+    token: string;
+}

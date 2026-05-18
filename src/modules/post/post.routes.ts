@@ -10,6 +10,7 @@ export const PostRoutes = Router();
 PostRoutes.get("/", PostController.getAllPosts);
 
 PostRoutes.get("/my", authenticateMiddleware, PostController.getMyPosts);
+PostRoutes.get("/:userId", PostController.getUserPosts);
 
 PostRoutes.post(
     "/upload",
