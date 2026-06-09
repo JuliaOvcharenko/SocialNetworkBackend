@@ -3,7 +3,7 @@ model PostImage {
   postId           BigInt @map("post_id")
   compressed_image String @db.VarChar(100)
   originalImage    String @map("original_image") @db.VarChar(100)
-  post             Post   @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_app_postimage_post_id_f96e8718_fk_post_app_post_id")
+  post Post @relation(fields: [postId], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "post_app_postimage_post_id_f96e8718_fk_post_app_post_id")
 
   @@index([postId], map: "post_app_postimage_post_id_f96e8718")
   @@map("post_app_postimage")

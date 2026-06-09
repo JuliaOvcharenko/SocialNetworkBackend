@@ -5,6 +5,26 @@ import { PostRepositoryContract } from "./types/post.contract";
 import { Post } from "./types/post.types";
 import { Prisma } from "../../../generated/prisma/client";
 
+async function toggleReaction(
+    model: "postLike" | "postHeart",
+    uniqueKey: "userId_postId",
+    userId: bigint,
+    postId: bigint,
+    countField: "postLike" | "postHeart",
+): Promise<{ toggled: boolean; count: number }> {
+    const where = { [uniqueKey]: { userId, postId } } as any;
+    const existing = await (prisma[model] as any).findUnique({ where });
+
+    if (existing) {
+        await (prisma[model] as any).delete({ where: { id: existing.id } });
+    } else {
+        await (prisma[model] as any).create({ data: { userId, postId } });
+    }
+
+    const count = await (prisma[model] as any).count({ where: { postId } });
+    return { toggled: !existing, count };
+}
+
 function getPostInclude() {
     return {
         author: {
@@ -25,6 +45,7 @@ function getPostInclude() {
 }
 
 function mapPost(post: any, userId?: number): Post {
+    const userIdStr = userId?.toString();
     return {
         id: post.id.toString(),
         title: post.title,
@@ -46,11 +67,11 @@ function mapPost(post: any, userId?: number): Post {
             username: post.author.username ?? null,
             avatarUrl: post.author.profile?.avatar ?? null,
         },
-        isLiked: userId
-            ? post.likes?.some((l: any) => l.userId?.toString() === userId.toString())
+        isLiked: userIdStr
+            ? post.likes?.some((l: any) => l.userId?.toString() === userIdStr)
             : false,
-        isHearted: userId
-            ? post.hearts?.some((h: any) => h.userId?.toString() === userId.toString())
+        isHearted: userIdStr
+            ? post.hearts?.some((h: any) => h.userId?.toString() === userIdStr)
             : false,
     };
 }
@@ -97,17 +118,17 @@ export const PostRepository: PostRepositoryContract = {
     },
 
     async upsertTags(tagNames) {
-        const ids: number[] = [];
-        for (const tagName of tagNames) {
-            const name = tagName.replace(/^#/, "").trim();
-            const tag = await prisma.tag.upsert({
-                where: { name },
-                update: {},
-                create: { name },
-            });
-            ids.push(Number(tag.id));
-        }
-        return ids;
+        const tags = await Promise.all(
+            tagNames.map((tagName) => {
+                const name = tagName.replace(/^#/, "").trim();
+                return prisma.tag.upsert({
+                    where: { name },
+                    update: {},
+                    create: { name },
+                });
+            }),
+        );
+        return tags.map((tag) => Number(tag.id));
     },
 
     async create(authorId, dto) {
@@ -188,48 +209,32 @@ export const PostRepository: PostRepositoryContract = {
 
     async delete(postId) {
         try {
-            await prisma.$transaction([
-                prisma.postLike.deleteMany({ where: { postId: BigInt(postId) } }),
-                prisma.postView.deleteMany({ where: { postId: BigInt(postId) } }),
-                prisma.postHeart.deleteMany({ where: { postId: BigInt(postId) } }),
-                prisma.tagPost.deleteMany({ where: { postId: BigInt(postId) } }),
-                prisma.postImage.deleteMany({ where: { postId: BigInt(postId) } }),
-                prisma.postLink.deleteMany({ where: { postId: BigInt(postId) } }),
-                prisma.post.delete({ where: { id: BigInt(postId) } }),
-            ]);
+            await prisma.post.delete({ where: { id: BigInt(postId) } });
         } catch (error) {
             throw handlePrismaError(error);
         }
     },
 
     async toggleLike(userId, postId) {
-        const existing = await prisma.postLike.findUnique({
-            where: { userId_postId: { userId: BigInt(userId), postId: BigInt(postId) } },
-        });
-        if (existing) {
-            await prisma.postLike.delete({ where: { id: existing.id } });
-        } else {
-            await prisma.postLike.create({
-                data: { userId: BigInt(userId), postId: BigInt(postId) },
-            });
-        }
-        const likesCount = await prisma.postLike.count({ where: { postId: BigInt(postId) } });
-        return { liked: !existing, likesCount };
+        const { toggled, count } = await toggleReaction(
+            "postLike",
+            "userId_postId",
+            BigInt(userId),
+            BigInt(postId),
+            "postLike",
+        );
+        return { liked: toggled, likesCount: count };
     },
 
     async toggleHeart(userId, postId) {
-        const existing = await prisma.postHeart.findUnique({
-            where: { userId_postId: { userId: BigInt(userId), postId: BigInt(postId) } },
-        });
-        if (existing) {
-            await prisma.postHeart.delete({ where: { id: existing.id } });
-        } else {
-            await prisma.postHeart.create({
-                data: { userId: BigInt(userId), postId: BigInt(postId) },
-            });
-        }
-        const heartsCount = await prisma.postHeart.count({ where: { postId: BigInt(postId) } });
-        return { hearted: !existing, heartsCount };
+        const { toggled, count } = await toggleReaction(
+            "postHeart",
+            "userId_postId",
+            BigInt(userId),
+            BigInt(postId),
+            "postHeart",
+        );
+        return { hearted: toggled, heartsCount: count };
     },
 };
 

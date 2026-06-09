@@ -1,21 +1,23 @@
 import { prisma } from "../../prisma/client";
 import { FriendsRepositoryContract } from "./types/friends.contracts";
 
-const userWithProfile = {
-    include: { profile: true },
-};
+const toId = (id: string | number) => BigInt(id);
+
+const userWithProfile = { include: { profile: true } };
 
 const STATUS = {
     pending: "pending",
     accepted: "accepted",
     rejected: "rejected",
-};
+} as const;
+
+type FriendshipStatus = (typeof STATUS)[keyof typeof STATUS];
 
 export const FriendsRepository: FriendsRepositoryContract = {
     async getPendingRequests(userId) {
         return prisma.friendship.findMany({
             where: {
-                to_user_id: BigInt(userId),
+                to_user_id: toId(userId),
                 status: STATUS.pending,
             },
             include: {
@@ -28,12 +30,12 @@ export const FriendsRepository: FriendsRepositoryContract = {
     async getSuggestions(userId, limit = 10) {
         return prisma.user.findMany({
             where: {
-                id: { not: BigInt(userId) },
+                id: { not: toId(userId) },
                 sentFriendships: {
-                    none: { to_user_id: BigInt(userId) },
+                    none: { to_user_id: toId(userId) },
                 },
                 receivedFriendships: {
-                    none: { from_user_id: BigInt(userId) },
+                    none: { from_user_id: toId(userId) },
                 },
             },
             include: { profile: true },
@@ -45,8 +47,8 @@ export const FriendsRepository: FriendsRepositoryContract = {
         return prisma.friendship.findMany({
             where: {
                 OR: [
-                    { from_user_id: BigInt(userId), status: STATUS.accepted },
-                    { to_user_id: BigInt(userId), status: STATUS.accepted },
+                    { from_user_id: toId(userId), status: STATUS.accepted },
+                    { to_user_id: toId(userId), status: STATUS.accepted },
                 ],
             },
             include: {
@@ -61,34 +63,26 @@ export const FriendsRepository: FriendsRepositoryContract = {
             throw new Error("Cannot send friend request to yourself");
         }
 
-        const existing = await prisma.friendship.findFirst({
-            where: {
-                OR: [
-                    { from_user_id: BigInt(fromUserId), to_user_id: BigInt(toUserId) },
-                    { from_user_id: BigInt(toUserId), to_user_id: BigInt(fromUserId) },
-                ],
-            },
-        });
-
-        if (existing) {
-            throw new Error("Friendship already exists");
+        try {
+            return await prisma.friendship.create({
+                data: {
+                    from_user_id: toId(fromUserId),
+                    to_user_id: toId(toUserId),
+                    status: STATUS.pending,
+                    created_at: new Date(),
+                },
+            });
+        } catch (e: any) {
+            if (e.code === "P2002") throw new Error("Friendship already exists");
+            throw e;
         }
-
-        return prisma.friendship.create({
-            data: {
-                from_user_id: BigInt(fromUserId),
-                to_user_id: BigInt(toUserId),
-                status: STATUS.pending,
-                created_at: new Date(),
-            },
-        });
     },
 
     async acceptRequest(requestId, userId) {
         return prisma.friendship.update({
             where: {
-                id: BigInt(requestId),
-                to_user_id: BigInt(userId),
+                id: toId(requestId),
+                to_user_id: toId(userId),
             },
             data: { status: STATUS.accepted },
         });
@@ -97,18 +91,22 @@ export const FriendsRepository: FriendsRepositoryContract = {
     async deleteFriendRequest(requestId, userId) {
         return prisma.friendship.delete({
             where: {
-                id: BigInt(requestId),
-                to_user_id: BigInt(userId),
+                id: toId(requestId),
+                to_user_id: toId(userId),
             },
         });
     },
 
     async deleteFriend(friendshipId, userId) {
-        return prisma.friendship.delete({
+        const record = await prisma.friendship.findFirst({
             where: {
-                id: BigInt(friendshipId),
-                OR: [{ from_user_id: BigInt(userId) }, { to_user_id: BigInt(userId) }],
+                id: toId(friendshipId),
+                OR: [{ from_user_id: toId(userId) }, { to_user_id: toId(userId) }],
             },
         });
+
+        if (!record) throw new Error("Friendship not found or access denied");
+
+        return prisma.friendship.delete({ where: { id: toId(friendshipId) } });
     },
 };
