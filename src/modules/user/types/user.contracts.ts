@@ -9,37 +9,51 @@ import {
     UserWithPassword,
     VerifyDTO,
 } from "./user.types";
-import { Avatar } from "../../../../generated/prisma/client";
-import { Image } from "../../../../generated/prisma/client";
+import { Prisma } from "../../../../generated/prisma/client";
+
+export type ProfileWithAlbums = Prisma.ProfileGetPayload<{
+    include: {
+        albums: {
+            include: {
+                images: true;
+            };
+        };
+    };
+}>;
+
+export type UserWithAvatars = User & {
+    profile: ProfileWithAlbums | null;
+};
+
+export interface UpdateProfileDTO {
+    firstName?: string;
+    lastName?: string;
+    username?: string;
+    signature?: string;
+    birthDate?: string;
+    pseudonym?: string;
+    avatar?: string;
+}
 
 export interface UserServiceContract {
     login: (credentials: LoginCredentials) => Promise<{ token: string }>;
     register: (credentials: RegisterCredentials) => Promise<{ message: string; token: string }>;
-    me: (dto: MeDTO) => Promise<User>;
-    verify: (
-        dto: VerifyDTO,
-        userId: number,
-    ) => Promise<{ token: string; user: UserWithAvatars | null }>;
-    updateProfile: (userId: number, data: Partial<User>) => Promise<User>;
+    me: (dto: MeDTO) => Promise<UserWithAvatars>;
+    verify: (dto: VerifyDTO, userId: number) => Promise<{ token: string; user: UserWithAvatars | null }>;
+    updateProfile: (userId: number, data: UpdateProfileDTO) => Promise<UserWithAvatars>;
     logout: (token: string) => Promise<{ message: string }>;
     isTokenBlacklisted: (token: string) => boolean;
     getById: (userId: number) => Promise<UserWithAvatars>;
 }
 
-export type UserWithAvatars = User & {
-    avatars: (Avatar & {
-        image: Image;
-    })[];
-};
-
 export interface UserRepositoryContract {
     findByEmailWithPassword: (email: string) => Promise<UserWithPassword | null>;
     findByEmail: (email: string) => Promise<User | null>;
     create: (data: CreateUser) => Promise<User>;
-    findById(id: number): Promise<UserWithAvatars | null>;
-    verify: (id: number) => Promise<User>;
-    findByIdWithPassword: (id: number) => Promise<User>;
+    findById: (id: number) => Promise<UserWithAvatars | null>;
+    findByIdWithPassword: (id: number) => Promise<UserWithPassword>;
 }
+
 export interface UserControllerContract {
     login: (
         req: Request<object, { token: string }, LoginCredentials>,
@@ -52,8 +66,8 @@ export interface UserControllerContract {
         next: NextFunction,
     ) => void;
     me: (
-        req: Request<object, User, object, object, LoginUser>,
-        res: Response<User, LoginUser>,
+        req: Request<object, UserWithAvatars, object, object, LoginUser>,
+        res: Response<UserWithAvatars, LoginUser>,
         next: NextFunction,
     ) => void;
     verify: (
@@ -67,8 +81,8 @@ export interface UserControllerContract {
         next: NextFunction,
     ) => void;
     updateProfile: (
-        req: Request<object, User, Partial<User>, object, LoginUser>,
-        res: Response<User, LoginUser>,
+        req: Request<object, UserWithAvatars, UpdateProfileDTO, object, LoginUser>,
+        res: Response<UserWithAvatars, LoginUser>,
         next: NextFunction,
     ) => void;
     logout: (

@@ -1,79 +1,77 @@
+
+import { Prisma } from "../../../generated/prisma/client";
 import { prisma } from "../../prisma/client";
 import { PhotoRepositoryContract } from "./types/photo.contracts";
+import { Photo } from "./types/photo.types";
 
+type AlbumImageWithProfile = Prisma.AlbumImageGetPayload<{
+    include: { album: { include: { profile: true } } };
+}>;
+
+function mapToPhoto(albumImage: AlbumImageWithProfile): Photo {
+    return {
+        id:         albumImage.id,
+        albumId:    albumImage.albumId,
+        userId:     albumImage.album.profile.userId,
+        photoName:  albumImage.image,
+        visibility: albumImage.isShown ? "public" : "private",
+        createdAt:  albumImage.createdAt,
+    };
+}
 
 export const PhotoRepository: PhotoRepositoryContract = {
     create: async (albumId, userId, data) => {
-        const image = await prisma.image.create({
+        const albumImage = await prisma.albumImage.create({
             data: {
-                pathname: data.photoName,
-                albumImages: {
-                    create: {
-                        albumId,
-                    },
-                },
+                image:   data.photoName,
+                isShown: false,
+                albumId,
             },
+            include: { album: { include: { profile: true } } },
         });
 
-        const albumImage = await prisma.albumImages.findFirst({
-            where: { imageId: image.id, albumId },
-            include: { image: true },
-        });
-
-        return mapToPhoto(albumImage!, userId);
+        return mapToPhoto(albumImage);
     },
 
     updateVisibility: async (photoId, data) => {
-        const updated = await prisma.albumImages.findFirstOrThrow({
-            where: { id: photoId },
-            include: { image: true, album: { include: { user: true } } },
+        const updated = await prisma.albumImage.update({
+            where:   { id: photoId },
+            data:    { isShown: data.visibility === "public" },
+            include: { album: { include: { profile: true } } },
         });
 
-        return mapToPhoto(updated, updated.album.userId);
+        return mapToPhoto(updated);
     },
 
     getAll: async (albumId, onlyPublic, page, limit) => {
-        const albumImages = await prisma.albumImages.findMany({
+        const albumImages = await prisma.albumImage.findMany({
             where: {
                 albumId,
-                ...(onlyPublic ? { album: { visibility: "public" } } : {}),
+                ...(onlyPublic ? { isShown: true } : {}),
             },
-            include: { image: true, album: { include: { user: true } } },
+            include: { album: { include: { profile: true } } },
             skip: (page - 1) * limit,
             take: limit,
         });
 
-        return albumImages.map((ai) => mapToPhoto(ai, ai.album.userId));
+        return albumImages.map(mapToPhoto);
     },
 
     delete: async (photoId) => {
-        await prisma.albumImages.delete({ where: { id: photoId } });
+        await prisma.albumImage.delete({ where: { id: photoId } });
     },
 
     findById: async (photoId) => {
-        const found = await prisma.albumImages.findFirst({
-            where: { id: photoId },
-            include: { image: true, album: { include: { user: true } } },
+        const found = await prisma.albumImage.findFirst({
+            where:   { id: photoId },
+            include: { album: { include: { profile: true } } },
         });
+
         if (!found) return null;
-        return mapToPhoto(found, found.album.userId);
+        return mapToPhoto(found);
     },
 
     countByAlbum: async (albumId) => {
-        const count = prisma.albumImages.count({ where: { albumId } });
-        return count;
+        return await prisma.albumImage.count({ where: { albumId } });
     },
 };
-
-function mapToPhoto(albumImage: any, userId: number) {
-    const photo = {
-        id: albumImage.id,
-        albumId: albumImage.albumId,
-        userId,
-        photoName: albumImage.image.pathname ?? "",
-        visibility: albumImage.album?.visibility ?? "private",
-        createdAt: albumImage.image.uploaded_at,
-        updatedAt: albumImage.image.uploaded_at,
-    };
-    return photo;
-}

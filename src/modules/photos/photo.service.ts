@@ -2,99 +2,84 @@ import { PhotoRepository } from "./photo.repository";
 import { AlbumRepository } from "../album/album.repository";
 import { ForbiddenError, NotFoundError, ConflictError } from "../../errors/app.errors";
 import { PhotoServiceContract } from "./types/photo.contracts";
-
+import { CreatePhoto, UpdatePhotoVisibility } from "./types/photo.types";
 
 const MAX_PHOTOS_PER_ALBUM = 100;
 
 export const PhotoService: PhotoServiceContract = {
-    create: async (userId, albumId, data) => {
-        const album = await AlbumRepository.findById(albumId);
+    async create(userId, albumId, data) {
+        const albumBigId = BigInt(albumId);
+        const userBigId = BigInt(userId);
 
-        if (!album) {
-            throw new NotFoundError("Album not found");
-        }
+        const album = await AlbumRepository.findById(albumBigId);
+        if (!album) throw new NotFoundError("Album");
 
-        if (album.userId !== userId) {
+        if (album.profileId !== userBigId) {
             throw new ForbiddenError("You are not the owner of this album");
         }
 
-        if (album.type === "system") {
-            throw new ForbiddenError("You cannot add photos to a system album");
-        }
-
-        const photosCount = await PhotoRepository.countByAlbum(albumId);
-
+        const photosCount = await PhotoRepository.countByAlbum(albumBigId);
         if (photosCount >= MAX_PHOTOS_PER_ALBUM) {
             throw new ConflictError("You have reached the maximum number of photos in this album");
         }
 
-        const photo = await PhotoRepository.create(albumId, userId, data);
-
-        return photo;
+        return await PhotoRepository.create(albumBigId, userBigId, data);
     },
 
-    updateVisibility: async (userId, albumId, photoId, data) => {
-        const album = await AlbumRepository.findById(albumId);
+    async updateVisibility(userId, albumId, photoId, data) {
+        const albumBigId = BigInt(albumId);
+        const photoBigId = BigInt(photoId);
+        const userBigId = BigInt(userId);
 
-        if (!album) {
-            throw new NotFoundError("Album not found");
-        }
+        const album = await AlbumRepository.findById(albumBigId);
+        if (!album) throw new NotFoundError("Album");
 
-        if (album.userId !== userId) {
+        if (album.profileId !== userBigId) {
             throw new ForbiddenError("You are not the owner of this album");
         }
 
-        const photo = await PhotoRepository.findById(photoId);
+        const photo = await PhotoRepository.findById(photoBigId);
+        if (!photo) throw new NotFoundError("Photo");
 
-        if (!photo) {
-            throw new NotFoundError("Photo not found");
-        }
-
-        if (photo.albumId !== albumId) {
+        if (photo.albumId !== albumBigId) {
             throw new ForbiddenError("This photo does not belong to this album");
         }
 
-        const updatedPhoto = await PhotoRepository.updateVisibility(photoId, data);
-
-        return updatedPhoto;
+        return await PhotoRepository.updateVisibility(photoBigId, data);
     },
 
-    getAll: async (userId, albumId, requesterId, page, limit) => {
-        const album = await AlbumRepository.findById(albumId);
+    async getAll(userId, albumId, requesterId, page, limit) {
+        const albumBigId = BigInt(albumId);
+        const requesterBigId = BigInt(requesterId);
 
-        if (!album) {
-            throw new NotFoundError("Album not found");
-        }
+        const album = await AlbumRepository.findById(albumBigId);
+        if (!album) throw new NotFoundError("Album");
 
-        const isOwner = album.userId === requesterId;
+        const isOwner = album.profileId === requesterBigId;
         const onlyPublic = !isOwner;
 
-        const photos = await PhotoRepository.getAll(albumId, onlyPublic, page, limit);
-
-        return photos;
+        return await PhotoRepository.getAll(albumBigId, onlyPublic, page, limit);
     },
 
-    delete: async (userId, albumId, photoId) => {
-        const album = await AlbumRepository.findById(albumId);
+    async delete(userId, albumId, photoId) {
+        const albumBigId = BigInt(albumId);
+        const photoBigId = BigInt(photoId);
+        const userBigId = BigInt(userId);
 
-        if (!album) {
-            throw new NotFoundError("Album not found");
-        }
+        const album = await AlbumRepository.findById(albumBigId);
+        if (!album) throw new NotFoundError("Album");
 
-        if (album.userId !== userId) {
+        if (album.profileId !== userBigId) {
             throw new ForbiddenError("You are not the owner of this album");
         }
 
-        const photo = await PhotoRepository.findById(photoId);
+        const photo = await PhotoRepository.findById(photoBigId);
+        if (!photo) throw new NotFoundError("Photo");
 
-        if (!photo) {
-            throw new NotFoundError("Photo not found");
-        }
-
-        if (photo.albumId !== albumId) {
+        if (photo.albumId !== albumBigId) {
             throw new ForbiddenError("This photo does not belong to this album");
         }
 
-        await PhotoRepository.delete(photoId);
+        await PhotoRepository.delete(photoBigId);
     },
 };

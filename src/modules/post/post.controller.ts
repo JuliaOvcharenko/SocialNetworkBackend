@@ -76,4 +76,26 @@ export const PostController: PostControllerContract = {
             next(error);
         }
     },
+    async toggleLike(req, res, next) {
+        try {
+            const result = await PostService.toggleLike(
+                res.locals.userId,
+                Number(req.params.postId),
+            );
+            res.json(result);
+        } catch (e) {
+            next(e);
+        }
+    },
+    async toggleHeart(req, res, next) {
+        try {
+            const result = await PostService.toggleHeart(
+                res.locals.userId,
+                Number(req.params.postId),
+            );
+            res.json(result);
+        } catch (e) {
+            next(e);
+        }
+    },
 };

@@ -4,8 +4,7 @@ import { AlbumControllerContract } from "./types/album.contracts";
 export const AlbumController: AlbumControllerContract = {
     async create(req, res, next) {
         try {
-            const userId = res.locals.userId;
-            const album = await AlbumService.create(userId, req.body);
+            const album = await AlbumService.create(res.locals.userId, req.body);
             res.status(201).json(album);
         } catch (error) {
             next(error);
@@ -14,20 +13,7 @@ export const AlbumController: AlbumControllerContract = {
 
     async edit(req, res, next) {
         try {
-            const userId = res.locals.userId;
-            const albumId = Number(req.params.id);
-            const album = await AlbumService.edit(userId, albumId, req.body);
-            res.json(album);
-        } catch (error) {
-            next(error);
-        }
-    },
-
-    async editVisibility(req, res, next) {
-        try {
-            const userId = res.locals.userId;
-            const albumId = Number(req.params.id);
-            const album = await AlbumService.editVisibility(userId, albumId, req.body);
+            const album = await AlbumService.edit(res.locals.userId, Number(req.params.id), req.body);
             res.json(album);
         } catch (error) {
             next(error);
@@ -46,9 +32,7 @@ export const AlbumController: AlbumControllerContract = {
 
     async delete(req, res, next) {
         try {
-            const userId = res.locals.userId;
-            const albumId = Number(req.params.id);
-            await AlbumService.delete(userId, albumId);
+            await AlbumService.delete(res.locals.userId, Number(req.params.id));
             res.status(204).send();
         } catch (error) {
             next(error);

@@ -1,0 +1,7 @@
+model Tag {
+  id       BigInt    @id @default(autoincrement())
+  name     String    @db.VarChar(100) @unique
+  tagPosts TagPost[]
+
+  @@map("post_app_tag")
+}

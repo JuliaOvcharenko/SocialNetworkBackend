@@ -1,0 +1,15 @@
+model Message {
+  id                       BigInt          @id @default(autoincrement())
+  text                     String?
+  createdAt                DateTime        @map("created_at") @db.Timestamptz(6)
+  chatId                   BigInt          @map("chat_id")
+  senderId                 BigInt?         @map("sender_id")
+  chat                     Chat            @relation(fields: [chatId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_app_message_chat_id_a7824698_fk_chat_app_chat_id")
+  sender                   User?           @relation(fields: [senderId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_app_message_sender_id_03c5fae9_fk_user_app_user_id")
+  chat_app_message_readers MessageReader[]
+  messageImages            MessageImage[]
+
+  @@index([chatId], map: "chat_app_message_chat_id_a7824698")
+  @@index([senderId], map: "chat_app_message_sender_id_03c5fae9")
+  @@map("chat_app_message")
+}

@@ -1,99 +1,114 @@
-import { Friendship, User } from "../../../generated/prisma/client";
 import { prisma } from "../../prisma/client";
 import { FriendsRepositoryContract } from "./types/friends.contracts";
-import { FriendshipWithProfile } from "./types/friends.types";
 
-const avatarInclude = {
-    avatars: {
-        where: { isActive: true },
-        include: { image: true },
-        take: 1,
-    },
+const userWithProfile = {
+    include: { profile: true },
+};
+
+const STATUS = {
+    pending: "pending",
+    accepted: "accepted",
+    rejected: "rejected",
 };
 
 export const FriendsRepository: FriendsRepositoryContract = {
-    async getPendingRequests(userId: number): Promise<FriendshipWithProfile[]> {
-        return await prisma.friendship.findMany({
-            where: { to_profile: userId, status: "pending" },
+    async getPendingRequests(userId) {
+        return prisma.friendship.findMany({
+            where: {
+                to_user_id: BigInt(userId),
+                status: STATUS.pending,
+            },
             include: {
-                fromProfileRel: {
-                    include: avatarInclude,
-                },
+                fromUser: userWithProfile,
+                toUser: userWithProfile,
             },
         });
     },
 
-    async getSuggestions(userId: number, limit: number = 2): Promise<User[]> {
-        return await prisma.user.findMany({
+    async getSuggestions(userId, limit = 10) {
+        return prisma.user.findMany({
             where: {
-                id: { not: userId },
-                sentRequests: { none: { to_profile: userId } },
-                receivedRequests: { none: { from_profile: userId } },
-                AND: [
-                    {
-                        sentRequests: {
-                            none: {
-                                to_profile: userId,
-                                status: "accepted",
-                            },
-                        },
-                    },
-                    {
-                        receivedRequests: {
-                            none: {
-                                from_profile: userId,
-                                status: "accepted",
-                            },
-                        },
-                    },
-                ],
+                id: { not: BigInt(userId) },
+                sentFriendships: {
+                    none: { to_user_id: BigInt(userId) },
+                },
+                receivedFriendships: {
+                    none: { from_user_id: BigInt(userId) },
+                },
             },
-            include: avatarInclude,
+            include: { profile: true },
             take: limit,
         });
     },
 
-    async getAcceptedFriends(userId: number): Promise<FriendshipWithProfile[]> {
-        return await prisma.friendship.findMany({
+    async getAcceptedFriends(userId) {
+        return prisma.friendship.findMany({
             where: {
-                OR: [{ from_profile: userId }, { to_profile: userId }],
-                status: "accepted",
+                OR: [
+                    { from_user_id: BigInt(userId), status: STATUS.accepted },
+                    { to_user_id: BigInt(userId), status: STATUS.accepted },
+                ],
             },
             include: {
-                fromProfileRel: {
-                    include: avatarInclude,
-                },
-                toProfileRel: {
-                    include: avatarInclude,
-                },
+                fromUser: userWithProfile,
+                toUser: userWithProfile,
             },
         });
     },
 
-    async createFriendship(
-        fromUserId: number,
-        toUserId: number,
-        status: string = "pending",
-    ): Promise<Friendship> {
-        return await prisma.friendship.create({
+    async createFriendRequest(fromUserId, toUserId) {
+        if (fromUserId === toUserId) {
+            throw new Error("Cannot send friend request to yourself");
+        }
+
+        const existing = await prisma.friendship.findFirst({
+            where: {
+                OR: [
+                    { from_user_id: BigInt(fromUserId), to_user_id: BigInt(toUserId) },
+                    { from_user_id: BigInt(toUserId), to_user_id: BigInt(fromUserId) },
+                ],
+            },
+        });
+
+        if (existing) {
+            throw new Error("Friendship already exists");
+        }
+
+        return prisma.friendship.create({
             data: {
-                from_profile: fromUserId,
-                to_profile: toUserId,
-                status,
+                from_user_id: BigInt(fromUserId),
+                to_user_id: BigInt(toUserId),
+                status: STATUS.pending,
+                created_at: new Date(),
             },
         });
     },
 
-    async updateFriendshipStatus(id: number, status: string): Promise<Friendship> {
-        return await prisma.friendship.update({
-            where: { id },
-            data: { status },
+    async acceptRequest(requestId, userId) {
+        return prisma.friendship.update({
+            where: {
+                id: BigInt(requestId),
+                to_user_id: BigInt(userId),
+            },
+            data: { status: STATUS.accepted },
         });
     },
 
-    async deleteFriendship(id: number): Promise<Friendship> {
-        return await prisma.friendship.delete({
-            where: { id },
+    async deleteFriendRequest(requestId, userId) {
+        return prisma.friendship.delete({
+            where: {
+                id: BigInt(requestId),
+                to_user_id: BigInt(userId),
+            },
+        });
+    },
+
+    async deleteFriend(friendshipId, userId) {
+        return prisma.friendship.delete({
+            where: {
+                id: BigInt(friendshipId),
+                OR: [{ from_user_id: BigInt(userId) }, { to_user_id: BigInt(userId) }],
+            },
         });
     },
 };

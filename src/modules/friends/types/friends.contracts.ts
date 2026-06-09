@@ -1,43 +1,45 @@
 import { Request, Response, NextFunction } from "express";
-import { Friendship, User } from "../../../../generated/prisma/client";
-import { FriendsOverview, FriendshipWithProfile } from "./friends.types";
+import { Friendship } from "../../../../generated/prisma/client";
+import { FriendsOverview, FriendshipWithUsers, UserWithProfile } from "./friends.types";
 import { LoginUser } from "../../user/types/user.types";
 
 export interface FriendsRepositoryContract {
-    getPendingRequests: (userId: number) => Promise<FriendshipWithProfile[]>;
-    getSuggestions: (userId: number, limit?: number) => Promise<User[]>;
-    getAcceptedFriends: (userId: number) => Promise<FriendshipWithProfile[]>;
-    createFriendship: (fromUserId: number, toUserId: number, status?: string) => Promise<Friendship>;
-    updateFriendshipStatus: (id: number, status: string) => Promise<Friendship>;
-    deleteFriendship: (id: number) => Promise<Friendship>;
+    getPendingRequests:  (userId: number) => Promise<FriendshipWithUsers[]>;
+    getSuggestions:      (userId: number, limit?: number) => Promise<UserWithProfile[]>;
+    getAcceptedFriends:  (userId: number) => Promise<FriendshipWithUsers[]>;
+    createFriendRequest: (fromUserId: number, toUserId: number) => Promise<Friendship>;
+    acceptRequest:       (requestId: number, userId: number) => Promise<Friendship>;
+    deleteFriendRequest: (requestId: number, userId: number) => Promise<Friendship>;
+    deleteFriend:        (friendshipId: number, userId: number) => Promise<Friendship>;
 }
 
 export interface FriendsServiceContract {
-    getRequests: (userId: number) => Promise<FriendshipWithProfile[]>;
-    getSuggestions: (userId: number) => Promise<User[]>;
-    getAllFriends: (userId: number) => Promise<FriendshipWithProfile[]>;
-    getOverview: (userId: number) => Promise<FriendsOverview>;
-    sendRequest: (currentUserId: number, targetUserId: number) => Promise<Friendship>;
-    acceptAction: (currentUserId: number, id: number, type?: string) => Promise<{ message: string; data: Friendship }>;
-    deleteAction: (currentUserId: number, id: number, type?: string) => Promise<{ message: string }>;
+    getRequests:    (userId: number) => Promise<FriendshipWithUsers[]>;
+    getSuggestions: (userId: number) => Promise<UserWithProfile[]>;
+    getAllFriends:   (userId: number) => Promise<FriendshipWithUsers[]>;
+    getOverview:    (userId: number) => Promise<FriendsOverview>;
+    sendRequest:    (currentUserId: number, targetUserId: number) => Promise<Friendship>;
+    acceptRequest:  (currentUserId: number, requestId: number) => Promise<{ message: string; data: Friendship }>;
+    deleteRequest:  (currentUserId: number, requestId: number) => Promise<{ message: string }>;
+    deleteFriend:   (currentUserId: number, friendshipId: number) => Promise<{ message: string }>;
 }
 
 export interface FriendsControllerContract {
     getRequests: (
-        req: Request<object, FriendshipWithProfile[], object, object, LoginUser>,
-        res: Response<FriendshipWithProfile[], LoginUser>,
+        req: Request<object, FriendshipWithUsers[], object, object, LoginUser>,
+        res: Response<FriendshipWithUsers[], LoginUser>,
         next: NextFunction,
     ) => void;
 
     getSuggestions: (
-        req: Request<object, User[], object, object, LoginUser>,
-        res: Response<User[], LoginUser>,
+        req: Request<object, UserWithProfile[], object, object, LoginUser>,
+        res: Response<UserWithProfile[], LoginUser>,
         next: NextFunction,
     ) => void;
 
     getAllFriends: (
-        req: Request<object, FriendshipWithProfile[], object, object, LoginUser>,
-        res: Response<FriendshipWithProfile[], LoginUser>,
+        req: Request<object, FriendshipWithUsers[], object, object, LoginUser>,
+        res: Response<FriendshipWithUsers[], LoginUser>,
         next: NextFunction,
     ) => void;
 
@@ -53,14 +55,20 @@ export interface FriendsControllerContract {
         next: NextFunction,
     ) => void;
 
-    acceptAction: (
-        req: Request<{ id: string }, { message: string; data: Friendship }, object, { type?: string }, LoginUser>,
+    acceptRequest: (
+        req: Request<{ id: string }, { message: string; data: Friendship }, object, object, LoginUser>,
         res: Response<{ message: string; data: Friendship }, LoginUser>,
         next: NextFunction,
     ) => void;
 
-    deleteAction: (
-        req: Request<{ id: string }, { message: string }, object, { type?: string }, LoginUser>,
+    deleteRequest: (
+        req: Request<{ id: string }, { message: string }, object, object, LoginUser>,
+        res: Response<{ message: string }, LoginUser>,
+        next: NextFunction,
+    ) => void;
+
+    deleteFriend: (
+        req: Request<{ id: string }, { message: string }, object, object, LoginUser>,
         res: Response<{ message: string }, LoginUser>,
         next: NextFunction,
     ) => void;

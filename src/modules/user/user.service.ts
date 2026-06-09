@@ -3,7 +3,7 @@ import { compare, hash } from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { env } from "../../config/env";
 import { LoginError, ConflictError, NotFoundError, BadRequestError } from "../../errors/app.errors";
-import { UserServiceContract, UserWithAvatars } from "./types/user.contracts";
+import { UserServiceContract, UserWithAvatars, UpdateProfileDTO } from "./types/user.contracts";
 import { UserRepository } from "./user.repository";
 import { MailService } from "./mail.service";
 import { prisma } from "../../prisma/client";
@@ -13,6 +13,7 @@ function generateCode(): string {
 }
 
 const blacklistedTokens = new Set<string>();
+const verificationCodes = new Map<number, string>();
 
 export const UserService: UserServiceContract = {
     async login(credentials) {
@@ -21,7 +22,7 @@ export const UserService: UserServiceContract = {
             throw new NotFoundError("User");
         }
 
-        if (!user.isVerified) {
+        if (!user.isActive) {
             throw new LoginError("Email is not verified");
         }
 
@@ -36,6 +37,7 @@ export const UserService: UserServiceContract = {
 
         return { token };
     },
+
     async register(credentials) {
         const existingUser = await UserRepository.findByEmail(credentials.email);
         if (existingUser) {
@@ -43,26 +45,44 @@ export const UserService: UserServiceContract = {
         }
 
         const hashedPassword = await hash(credentials.password, 10);
-        const code = generateCode();
-
         const user = await UserRepository.create({
-            ...credentials,
+            email: credentials.email,
             password: hashedPassword,
-            verificationCode: code,
+            isSuperuser: false,
+            isStaff: false,
+            isActive: false,
+            dateJoined: new Date(),
+            firstName: "",
+            lastName: "",
+        });
+
+        const userId = Number(user.id);
+
+        const profile = await prisma.profile.create({
+            data: {
+                userId: BigInt(userId),
+                is_text_signature: true,
+                is_image_signature: true,
+            },
         });
 
         await prisma.album.create({
             data: {
                 name: "Avatars",
-                visibility: "private",
-                type: "system",
-                userId: user.id,
+                theme: "default",
+                year: new Date().getFullYear(),
+                isShown: false,
+                isDefault: true,
+                profileId: profile.id,
+                createdAt: new Date(),
             },
         });
 
+        const code = generateCode();
+        verificationCodes.set(userId, code);
         await MailService.sendVerificationCode(credentials.email, code);
 
-        const token = jwt.sign({ id: user.id }, env.SECRET_KEY, {
+        const token = jwt.sign({ id: userId }, env.SECRET_KEY, {
             expiresIn: env.TOKEN_TTL as StringValue,
         });
 
@@ -70,13 +90,18 @@ export const UserService: UserServiceContract = {
     },
 
     async verify(dto, userId) {
-        const user = await UserRepository.findByIdWithPassword(userId);
+        const storedCode = verificationCodes.get(userId);
 
-        if (user.verificationCode !== dto.code) {
+        if (!storedCode || storedCode !== dto.code) {
             throw new BadRequestError("Invalid verification code");
         }
 
-        await UserRepository.verify(userId);
+        verificationCodes.delete(userId);
+
+        await prisma.user.update({
+            where: { id: userId },
+            data: { isActive: true },
+        });
 
         const token = jwt.sign({ id: userId }, env.SECRET_KEY, {
             expiresIn: env.TOKEN_TTL as StringValue,
@@ -96,25 +121,44 @@ export const UserService: UserServiceContract = {
         return user;
     },
 
-    async updateProfile(userId: number, data: any) {
-        if (data.birthDate) {
-            const [day, month, year] = data.birthDate.split(".");
-            data.birthDate = new Date(`${year}-${month}-${day}`).toISOString();
-        }
+    async updateProfile(userId: number, data: UpdateProfileDTO) {
+        const { birthDate, pseudonym, avatar, firstName, lastName, username, signature } = data;
 
-        if (data.nickname) {
-            const existing = await prisma.user.findUnique({
-                where: { nickname: data.nickname },
-            });
-            if (existing && existing.id !== userId) {
-                throw new Error("Nickname is already taken");
+        if (username) {
+            const existing = await prisma.user.findUnique({ where: { username } });
+            if (existing && Number(existing.id) !== userId) {
+                throw new ConflictError("User with such username");
             }
         }
 
-        return await prisma.user.update({
-            where: { id: userId },
-            data,
+        await prisma.user.update({
+            where: { id: BigInt(userId) },
+            data: {
+                ...(firstName && { firstName }),
+                ...(lastName && { lastName }),
+                ...(username && { username }),
+                ...(signature && { signature }),
+            },
         });
+
+        const profileData: any = {};
+        if (birthDate) {
+            const [day, month, year] = birthDate.split(".");
+            profileData.birthDate = new Date(`${year}-${month}-${day}`).toISOString();
+        }
+        if (pseudonym) profileData.pseudonym = pseudonym;
+        if (avatar) profileData.avatar = avatar;
+
+        if (Object.keys(profileData).length > 0) {
+            await prisma.profile.update({
+                where: { userId: BigInt(userId) },
+                data: profileData,
+            });
+        }
+
+        const updatedUser = await UserRepository.findById(userId);
+        if (!updatedUser) throw new NotFoundError("User");
+        return updatedUser;
     },
 
     logout: async (token: string): Promise<{ message: string }> => {
@@ -129,7 +173,7 @@ export const UserService: UserServiceContract = {
     getById: async (userId: number): Promise<UserWithAvatars> => {
         const user = await UserRepository.findById(userId);
         if (!user) {
-            throw new Error("User not found");
+            throw new NotFoundError("User");
         }
         return user;
     },

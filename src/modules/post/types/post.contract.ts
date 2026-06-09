@@ -9,27 +9,40 @@ import {
 } from "./post.types";
 import { LoginUser } from "../../user/types/user.types";
 
-export interface PostServiceContract {
-    getAllPosts: (query: PaginationQuery) => Promise<PaginatedPosts>;
-    getMyPosts: (userId: number, query: PaginationQuery) => Promise<PaginatedPosts>;
-    createPost(userId: number, dto: CreatePostDTO): Promise<Post>;
-    updatePost(userId: number, postId: number, dto: UpdatePostDTO): Promise<Post>;
-    deletePost(userId: number, postId: number): Promise<DeletePostResult>;
-    getUserPosts(userId: number, query: PaginationQuery): Promise<PaginatedPosts>;
-}
-
 export interface PostRepositoryContract {
-    findAllPaginated: (page: number, limit: number) => Promise<{ posts: Post[]; total: number }>;
-    findByAuthorPaginated: (
+    findAllPaginated(
+        page: number,
+        limit: number,
+        userId?: number,
+    ): Promise<{ posts: Post[]; total: number }>;
+    findByAuthorPaginated(
         authorId: number,
         page: number,
         limit: number,
-    ) => Promise<{ posts: Post[]; total: number }>;
+        userId?: number,
+    ): Promise<{ posts: Post[]; total: number }>;
     upsertTags(tagNames: string[]): Promise<number[]>;
     create(authorId: number, dto: CreatePostDTO & { tagIds: number[] }): Promise<Post>;
-    findById(postId: number): Promise<Post | null>;
+    findById(postId: number, userId?: number): Promise<Post | null>;
     update(postId: number, dto: UpdatePostDTO & { tagIds?: number[] }): Promise<Post>;
     delete(postId: number): Promise<void>;
+    toggleLike(userId: number, postId: number): Promise<{ liked: boolean; likesCount: number }>;
+    toggleHeart(userId: number, postId: number): Promise<{ hearted: boolean; heartsCount: number }>;
+}
+
+export interface PostServiceContract {
+    getAllPosts(query: PaginationQuery, userId?: number): Promise<PaginatedPosts>;
+    getMyPosts(userId: number, query: PaginationQuery): Promise<PaginatedPosts>;
+    createPost(userId: number, dto: CreatePostDTO): Promise<Post>;
+    updatePost(userId: number, postId: number, dto: UpdatePostDTO): Promise<Post>;
+    deletePost(userId: number, postId: number): Promise<DeletePostResult>;
+    getUserPosts(
+        userId: number,
+        query: PaginationQuery,
+        currentUserId?: number,
+    ): Promise<PaginatedPosts>;
+    toggleLike(userId: number, postId: number): Promise<{ liked: boolean; likesCount: number }>;
+    toggleHeart(userId: number, postId: number): Promise<{ hearted: boolean; heartsCount: number }>;
 }
 
 export interface PostControllerContract {
@@ -66,6 +79,16 @@ export interface PostControllerContract {
     deletePost: (
         req: Request<{ postId: string }, DeletePostResult, object, object, LoginUser>,
         res: Response<DeletePostResult, LoginUser>,
+        next: NextFunction,
+    ) => void;
+    toggleLike: (
+        req: Request<{ postId: string }, any, any, any, LoginUser>,
+        res: Response<any, LoginUser>,
+        next: NextFunction,
+    ) => void;
+    toggleHeart: (
+        req: Request<{ postId: string }, any, any, any, LoginUser>,
+        res: Response<any, LoginUser>,
         next: NextFunction,
     ) => void;
 }

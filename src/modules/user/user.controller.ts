@@ -44,9 +44,6 @@ export const UserController: UserControllerContract = {
         try {
             const userId = res.locals.userId;
             const file = req.file;
-            const rawAvatarId = req.body.avatarId;
-            const avatarId =
-                rawAvatarId && rawAvatarId !== "undefined" ? Number(rawAvatarId) : null;
 
             if (!file) {
                 return res.status(400).json({ status: "error", message: "Файл не получен" });
@@ -54,13 +51,8 @@ export const UserController: UserControllerContract = {
 
             res.setHeader("Connection", "close");
 
-            if (avatarId) {
-                const result = await AvatarService.replaceAvatar(userId, avatarId, file);
-                return res.json(result);
-            } else {
-                const result = await AvatarService.uploadAvatar(userId, file, true);
-                return res.json(result);
-            }
+            const result = await AvatarService.uploadAvatar(userId, file);
+            return res.json(result);
         } catch (error) {
             next(error);
         }

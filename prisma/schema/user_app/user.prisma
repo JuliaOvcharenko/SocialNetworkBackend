@@ -1,0 +1,33 @@
+model User {
+  id                                                                  BigInt                           @id @default(autoincrement())
+  password                                                            String                           @db.VarChar(128)
+  lastLogin                                                           DateTime?                        @map("last_login") @db.Timestamptz(6)
+  isSuperuser                                                         Boolean                          @map("is_superuser")
+  firstName                                                           String                           @map("first_name") @db.VarChar(150)
+  lastName                                                            String                           @map("last_name") @db.VarChar(150)
+  isStaff                                                             Boolean                          @map("is_staff")
+  isActive                                                            Boolean                          @map("is_active")
+  dateJoined                                                          DateTime                         @map("date_joined") @db.Timestamptz(6)
+  username                                                            String?                          @unique(map: "user_app_user_username_e45e0961_uniq") @db.VarChar(150)
+  email                                                               String                           @unique @db.VarChar(254)
+  chatsAdmin                                                          Chat[]
+  chats                                                               ChatUser[]
+  messages                                                            Message[]
+  messageReaders                                                      MessageReader[]
+  django_admin_log                                                    django_admin_log[]
+  posts                                                               Post[]
+  postHearts                                                          PostHeart[]
+  postLikes                                                           PostLike[]
+  postViews                                                           PostView[]
+  profile                                                             Profile?
+  sentFriendships                                                     Friendship[] @relation("friendship_from")
+  receivedFriendships                                                 Friendship[] @relation("friendship_to")
+  user_app_user_groups                                                user_app_user_groups[]
+  user_app_user_user_permissions                                      user_app_user_user_permissions[]
+
+
+  @@index([email], map: "user_app_user_email_e59b5739_like")
+  @@index([username], map: "user_app_user_username_e45e0961_like")
+  
+  @@map("user_app_user")
+}

@@ -3,13 +3,10 @@ import { UserRepositoryContract } from "./types/user.contracts";
 import { InternalServerError, NotFoundError } from "../../errors/app.errors";
 import { prisma } from "../../prisma/client";
 
-
 export const UserRepository: UserRepositoryContract = {
     async findByEmailWithPassword(email) {
         try {
-            return await prisma.user.findFirst({
-                where: { email },
-            });
+            return await prisma.user.findFirst({ where: { email } });
         } catch (error) {
             throw handlePrismaError(error);
         }
@@ -28,45 +25,46 @@ export const UserRepository: UserRepositoryContract = {
 
     async create(data) {
         try {
-            return await prisma.user.create({ data });
+            return await prisma.user.create({
+                data: {
+                    email: data.email,
+                    password: data.password,
+                    isSuperuser: false,
+                    isStaff: false,
+                    isActive: false,
+                    dateJoined: new Date(),
+                    firstName: "",
+                    lastName: "",
+                },
+                omit: { password: true },
+            });
         } catch (error) {
             throw handlePrismaError(error);
         }
     },
 
     async findById(id: number) {
-        const findedUser = await prisma.user.findUnique({
-            where: { id },
-            include: {
-                avatars: {
-                    where: { isShown: true },
-                    include: { image: true },
-                    orderBy: [
-                        { isActive: 'desc' },
-                        { id: 'desc' }
-                    ]
+        try {
+            return await prisma.user.findUnique({
+                where: { id },
+                omit: { password: true },
+                include: {
+                    profile: {
+                        include: {
+                            albums: {
+                                include: {
+                                    images: true,
+                                },
+                            },
+                        },
+                    },
                 },
-                album: {
-                    include: {
-                        images: {
-                            include: { image: true }
-                        },
-                        avatars: {
-                            include: { avatar: { include: { image: true } } }
-                        },
-                    }
-                }
-            }
-        });
-        return findedUser
+            });
+        } catch (error) {
+            throw handlePrismaError(error);
+        }
     },
-    async verify(id: number) {
-        return prisma.user.update({
-            where: { id },
-            data: { isVerified: true, verificationCode: null },
-            omit: { password: true },
-        });
-    },
+
     async findByIdWithPassword(id: number) {
         try {
             return await prisma.user.findFirstOrThrow({ where: { id } });
@@ -74,13 +72,13 @@ export const UserRepository: UserRepositoryContract = {
             throw handlePrismaError(error);
         }
     },
-    
 };
 
 function handlePrismaError(error: unknown): Error {
+    console.error("PRISMA ERROR:", error);
     if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
-            return new NotFoundError("Album");
+            return new NotFoundError("User");
         }
         return new InternalServerError(`DB_ERROR: ${error.code}`);
     }

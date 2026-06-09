@@ -1,0 +1,12 @@
+model PostView {
+  id     BigInt @id @default(autoincrement())
+  postId BigInt @map("post_id")
+  userId BigInt @map("user_id")
+  post   Post   @relation(fields: [postId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_app_postview_post_id_bfaa8cff_fk_post_app_post_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "post_app_postview_user_id_3e80c157_fk_user_app_user_id")
+
+  @@unique([userId, postId], map: "unique_post_view")
+  @@index([postId], map: "post_app_postview_post_id_bfaa8cff")
+  @@index([userId], map: "post_app_postview_user_id_3e80c157")
+  @@map("post_app_postview")
+}

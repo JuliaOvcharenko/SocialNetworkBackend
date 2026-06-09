@@ -45,8 +45,7 @@ export const PostService: PostServiceContract = {
 
     async updatePost(userId, postId, dto) {
         const post = (await PostRepository.findById(postId)) as Post;
-
-        if (post.author.id !== userId) {
+        if (+post.author.id !== userId) {
             throw new ForbiddenError();
         }
 
@@ -61,7 +60,7 @@ export const PostService: PostServiceContract = {
     async deletePost(userId, postId) {
         const post = (await PostRepository.findById(postId)) as Post;
 
-        if (post.author.id !== userId) {
+        if (+post.author.id !== userId) {
             throw new ForbiddenError();
         }
 
@@ -78,5 +77,12 @@ export const PostService: PostServiceContract = {
             data: posts,
             meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
         };
+    },
+
+    async toggleLike(userId, postId) {
+        return PostRepository.toggleLike(userId, postId);
+    },
+    async toggleHeart(userId, postId) {
+        return PostRepository.toggleHeart(userId, postId);
     },
 };

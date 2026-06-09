@@ -12,6 +12,10 @@ PostRoutes.get("/", PostController.getAllPosts);
 PostRoutes.get("/my", authenticateMiddleware, PostController.getMyPosts);
 PostRoutes.get("/:userId", PostController.getUserPosts);
 
+
+PostRoutes.post("/:postId/like", authenticateMiddleware, PostController.toggleLike);
+PostRoutes.post("/:postId/heart", authenticateMiddleware, PostController.toggleHeart);
+
 PostRoutes.post(
     "/upload",
     authenticateMiddleware,
@@ -39,3 +43,4 @@ PostRoutes.delete(
     authenticateMiddleware,
     PostController.deletePost,
 );
+

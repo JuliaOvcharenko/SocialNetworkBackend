@@ -1,10 +1,11 @@
-import { Router} from 'express'
+import { Router } from 'express'
 import { UserRoutes } from '../modules/user/user.routes';
 import { AlbumRoutes } from '../modules/album/album.routes';
 import { PhotoRoutes } from "../modules/photos/photo.routes";
 import { PostRoutes } from '../modules/post/post.routes';
 import friendsRoutes from '../modules/friends/friends.routes';
-
+import { chatRouter } from '../modules/chat/chat.router';
+import { messageRouter } from '../modules/message/message.router';
 
 export const appRouter = Router()
 
@@ -13,3 +14,5 @@ appRouter.use("/api/albums", AlbumRoutes);
 appRouter.use("/api/albums", PhotoRoutes);
 appRouter.use("/api/posts", PostRoutes);
 appRouter.use("/api/friends", friendsRoutes);
+appRouter.use("/api/chats", chatRouter);
+appRouter.use("/api/messages", messageRouter);

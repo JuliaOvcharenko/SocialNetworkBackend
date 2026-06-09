@@ -3,24 +3,25 @@ import { createPostSchema } from "../post.schema";
 
 export interface PostAuthor {
     id: number;
-    nickname: string | null;
-    avatarUrl: string;
-    signatureUrl: string | null;
-    isOnline: boolean;
+    username: string | null;
+    avatarUrl: string | null;
 }
 
 export interface Post {
     id: number;
     title: string;
-    text: string;
+    content: string;
+    topic: string;
     createdAt: Date;
     likesCount: number;
     viewsCount: number;
-    isLikedByMe: boolean;
+    heartsCount: number;
     tags: string[];
     images: string[];
-    links: { url: string; label?: string | null }[];
+    links: { url: string }[];
     author: PostAuthor;
+    isLiked: boolean;
+    isHearted: boolean;
 }
 
 export type CreatePostDTO = InferType<typeof createPostSchema>;
@@ -47,7 +48,7 @@ export interface UpdatePostDTO {
     tags?: string[];
     tagIds?: number[];
     imageUrls?: string[];
-    links?: { url: string; label?: string }[];
+    links?: { url: string }[];
 }
 
 export interface DeletePostResult {

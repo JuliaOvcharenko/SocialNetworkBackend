@@ -1,8 +1,0 @@
-model AlbumImages {
-  id         Int             @id @default(autoincrement())
-  imageId    Int
-  albumId    Int
-  visibility AlbumVisibility @default(private)
-  image      Image           @relation(fields: [imageId], references: [id], onDelete: Cascade)
-  album      Album           @relation(fields: [albumId], references: [id], onDelete: Cascade)
-}

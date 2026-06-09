@@ -2,59 +2,51 @@ import { PrismaClientKnownRequestError } from "@prisma/client/runtime/client";
 import { InternalServerError, NotFoundError } from "../../errors/app.errors";
 import { AlbumRepositoryContract } from "./types/album.contracts";
 import { prisma } from "../../prisma/client";
-import { Album } from "./types/album.types";
-
 
 function handlePrismaError(error: unknown): Error {
+    console.error("Prisma error:", error);
     if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === "P2025") {
-            return new NotFoundError("Album");
-        }
+        if (error.code === "P2025") return new NotFoundError("Album");
         return new InternalServerError(`DB_ERROR: ${error.code}`);
     }
     return new InternalServerError();
 }
 
 export const AlbumRepository: AlbumRepositoryContract = {
-    async create(userId, data) {
+    async create(profileId, data) {
         try {
+            const { name, theme, year, isShown } = data;
             return await prisma.album.create({
-                data: { ...data, userId, type: "custom" },
+                data: { name, theme, year, isShown, profileId, isDefault: false },
+                include: { images: true },
             });
         } catch (error) {
+            console.error("Album create error:", error);
             throw handlePrismaError(error);
         }
     },
 
     async edit(id, data) {
         try {
-            return await prisma.album.update({ where: { id }, data });
+            return await prisma.album.update({
+                where: { id },
+                data,
+                include: { images: true },
+            });
         } catch (error) {
             throw handlePrismaError(error);
         }
     },
 
-    async editVisibility(id, data) {
+    async getAll(profileId) {
         try {
-            return await prisma.album.update({ where: { id }, data });
+            return await prisma.album.findMany({
+                where: { profileId },
+                include: { images: true },
+            });
         } catch (error) {
             throw handlePrismaError(error);
         }
-    },
-
-    async getAll(userId: number): Promise<Album[]> {
-        const albums = await prisma.album.findMany({
-            where: { userId },
-            include: {
-                images: {
-                    include: { image: true }
-                },
-                avatars: {
-                    include: { avatar: { include: { image: true } } }
-                },
-            },
-        });
-        return albums;
     },
 
     async delete(id) {
@@ -67,7 +59,10 @@ export const AlbumRepository: AlbumRepositoryContract = {
 
     async findById(id) {
         try {
-            return await prisma.album.findUnique({ where: { id } });
+            return await prisma.album.findUnique({
+                where: { id },
+                include: { images: true, profile: true },
+            });
         } catch (error) {
             throw handlePrismaError(error);
         }

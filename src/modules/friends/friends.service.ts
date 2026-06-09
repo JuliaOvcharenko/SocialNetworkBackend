@@ -1,21 +1,19 @@
-import { Friendship, User } from "../../../generated/prisma/client";
+import { Friendship } from "../../../generated/prisma/client";
 import { FriendsRepository } from "./friends.repository";
 import { FriendsServiceContract } from "./types/friends.contracts";
-import { FriendsOverview, FriendshipWithProfile } from "./types/friends.types";
-
-
+import { FriendsOverview, FriendshipWithUsers, UserWithProfile } from "./types/friends.types";
 
 export const FriendsService: FriendsServiceContract = {
-    async getRequests(userId: number): Promise<FriendshipWithProfile[]> {
-        return await FriendsRepository.getPendingRequests(userId);
+    async getRequests(userId: number): Promise<FriendshipWithUsers[]> {
+        return FriendsRepository.getPendingRequests(userId);
     },
 
-    async getSuggestions(userId: number): Promise<User[]> {
-        return await FriendsRepository.getSuggestions(userId, 2);
+    async getSuggestions(userId: number): Promise<UserWithProfile[]> {
+        return FriendsRepository.getSuggestions(userId, 10);
     },
 
-    async getAllFriends(userId: number): Promise<FriendshipWithProfile[]> {
-        return await FriendsRepository.getAcceptedFriends(userId);
+    async getAllFriends(userId: number): Promise<FriendshipWithUsers[]> {
+        return FriendsRepository.getAcceptedFriends(userId);
     },
 
     async getOverview(userId: number): Promise<FriendsOverview> {
@@ -24,40 +22,28 @@ export const FriendsService: FriendsServiceContract = {
             FriendsRepository.getAcceptedFriends(userId),
             FriendsRepository.getSuggestions(userId, 2),
         ]);
-
         return { requests, suggestions, friends };
     },
 
     async sendRequest(currentUserId: number, targetUserId: number): Promise<Friendship> {
-        return await FriendsRepository.createFriendship(currentUserId, targetUserId, "pending");
+        return FriendsRepository.createFriendRequest(currentUserId, targetUserId);
     },
 
-    async acceptAction(currentUserId: number, id: number, type?: string): Promise<{ message: string; data: Friendship }> {
-        if (type === "request") {
-            const updated = await FriendsRepository.updateFriendshipStatus(id, "accepted");
-            return { message: "Запрос принят", data: updated };
-        }
-
-        if (type === "suggestion") {
-            const request = await FriendsRepository.createFriendship(currentUserId, id, "pending");
-            return { message: "Запрос отправлен", data: request };
-        }
-
-        throw new Error("Invalid type parameter");
+    async acceptRequest(
+        currentUserId: number,
+        requestId: number,
+    ): Promise<{ message: string; data: Friendship }> {
+        const data = await FriendsRepository.acceptRequest(requestId, currentUserId);
+        return { message: "Accepted", data };
     },
 
-    async deleteAction(currentUserId: number, targetOrFriendshipId: number, type?: string): Promise<{ message: string }> {
-        if (type === "request") {
-            await FriendsRepository.deleteFriendship(targetOrFriendshipId);
-            return { message: "Запрос удален" };
-        }
+    async deleteRequest(currentUserId: number, requestId: number): Promise<{ message: string }> {
+        await FriendsRepository.deleteFriendRequest(requestId, currentUserId);
+        return { message: "Deleted" };
+    },
 
-        if (type === "suggestion") {
-            await FriendsRepository.createFriendship(currentUserId, targetOrFriendshipId, "ignored");
-            return { message: "Рекомендация проигнорирована" };
-        }
-
-        await FriendsRepository.deleteFriendship(targetOrFriendshipId);
-        return { message: "Пользователь удален из друзей" };
-    }
+    async deleteFriend(currentUserId: number, friendshipId: number): Promise<{ message: string }> {
+        await FriendsRepository.deleteFriend(friendshipId, currentUserId);
+        return { message: "Deleted" };
+    },
 };

@@ -1,44 +1,46 @@
-import { ForbiddenError, NotFoundError, ConflictError } from "../../errors/app.errors";
+import { ForbiddenError, NotFoundError } from "../../errors/app.errors";
 import { AlbumRepository } from "./album.repository";
 import { AlbumServiceContract } from "./types/album.contracts";
+import { prisma } from "../../prisma/client";
 
+async function getProfileIdByUserId(userId: number): Promise<bigint> {
+    const profile = await prisma.profile.findUnique({
+        where: { userId: BigInt(userId) },
+    });
+    if (!profile) throw new NotFoundError("Profile");
+    return profile.id;
+}
 
 export const AlbumService: AlbumServiceContract = {
     async create(userId, data) {
-        return await AlbumRepository.create(userId, data);
+        const profileId = await getProfileIdByUserId(userId);
+        return await AlbumRepository.create(profileId, data);
     },
 
     async getAll(userId) {
-        return await AlbumRepository.getAll(userId);
+        const profileId = await getProfileIdByUserId(userId);
+        return await AlbumRepository.getAll(profileId);
     },
 
     async edit(userId, albumId, data) {
-        const album = await AlbumRepository.findById(albumId);
+        const profileId = await getProfileIdByUserId(userId);
+        const album = await AlbumRepository.findById(BigInt(albumId));
 
         if (!album) throw new NotFoundError("Album");
-        if (album.userId !== userId) throw new ForbiddenError("Album does not belong to you");
-        if (album.type === "system") throw new ForbiddenError("Cannot edit system album");
+        if (album.profileId !== profileId) throw new ForbiddenError("Album does not belong to you");
+        if (album.isDefault) throw new ForbiddenError("Cannot edit default album");
 
-        return await AlbumRepository.edit(albumId, data);
-    },
-
-    async editVisibility(userId, albumId, data) {
-        const album = await AlbumRepository.findById(albumId);
-
-        if (!album) throw new NotFoundError("Album");
-        if (album.userId !== userId) throw new ForbiddenError("Album does not belong to you"); 
-        if (album.type === "system") throw new ForbiddenError("Cannot change visibility of system album");
-
-        return await AlbumRepository.editVisibility(albumId, data);
+        return await AlbumRepository.edit(BigInt(albumId), data);
     },
 
     async delete(userId, albumId) {
-        const album = await AlbumRepository.findById(albumId);
+        const profileId = await getProfileIdByUserId(userId);
+        const album = await AlbumRepository.findById(BigInt(albumId));
 
         if (!album) throw new NotFoundError("Album");
-        if (album.userId !== userId) throw new ForbiddenError("Album does not belong to you");
-        if (album.type === "system") throw new ForbiddenError("Cannot delete system album");
+        if (album.profileId !== profileId) throw new ForbiddenError("Album does not belong to you");
+        if (album.isDefault) throw new ForbiddenError("Cannot delete default album");
 
-        await AlbumRepository.delete(albumId);
+        await AlbumRepository.delete(BigInt(albumId));
     },
 };

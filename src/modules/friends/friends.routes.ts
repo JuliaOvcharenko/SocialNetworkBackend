@@ -4,20 +4,17 @@ import { authenticateMiddleware } from "../../middlewares/authenticate.middlewar
 
 const router = Router();
 
-
 router.use(authenticateMiddleware);
 
-
-router.get("/requests", friendsController.getRequests);
+router.get("/requests",    friendsController.getRequests);
 router.get("/suggestions", friendsController.getSuggestions);
-router.get("/overview", friendsController.getOverview);
-router.get("/", friendsController.getAllFriends);
+router.get("/overview",    friendsController.getOverview);
+router.get("/",            friendsController.getAllFriends);
 
+router.post("/requests",          friendsController.sendRequest);
+router.post("/requests/:id/accept", friendsController.acceptRequest);
 
-router.post("/requests", friendsController.sendRequest);
-router.post("/:id/accept", friendsController.acceptAction);
-
-
-router.delete("/:id", friendsController.deleteAction);
+router.delete("/requests/:id", friendsController.deleteRequest);
+router.delete("/:id",          friendsController.deleteFriend);
 
 export default router;

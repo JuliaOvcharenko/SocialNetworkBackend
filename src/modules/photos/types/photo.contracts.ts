@@ -4,12 +4,12 @@ import { CreatePhoto, Photo, UpdatePhotoVisibility } from "./photo.types";
 
 
 export interface PhotoRepositoryContract {
-    create: (albumId: number, userId: number, data: CreatePhoto) => Promise<Photo>;
-    updateVisibility: (photoId: number, data: UpdatePhotoVisibility) => Promise<Photo>;
-    getAll: (albumId: number, onlyPublic: boolean, page: number, limit: number) => Promise<Photo[]>;
-    delete: (photoId: number) => Promise<void>;
-    findById: (photoId: number) => Promise<Photo | null>;
-    countByAlbum: (albumId: number) => Promise<number>;
+    create:             (albumId: bigint, userId: bigint, data: CreatePhoto) => Promise<Photo>;
+    updateVisibility:   (photoId: bigint, data: UpdatePhotoVisibility) => Promise<Photo>;
+    getAll:             (albumId: bigint, onlyPublic: boolean, page: number, limit: number) => Promise<Photo[]>;
+    delete:             (photoId: bigint) => Promise<void>;
+    findById:           (photoId: bigint) => Promise<Photo | null>;
+    countByAlbum:       (albumId: bigint) => Promise<number>;
 }
 
 export interface PhotoServiceContract {

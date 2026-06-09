@@ -1,13 +1,16 @@
-import { Friendship, User } from "../../../../generated/prisma/client";
+import { Friendship, User, Profile } from "../../../../generated/prisma/client";
 
+export type FriendshipStatus = "pending" | "accepted" | "rejected";
 
-export type FriendshipWithProfile = Friendship & {
-  fromProfileRel?: User;
-  toProfileRel?: User;
+export type UserWithProfile = User & { profile: Profile | null };
+
+export type FriendshipWithUsers = Friendship & {
+    fromUser: UserWithProfile;
+    toUser:   UserWithProfile;
 };
 
 export interface FriendsOverview {
-  requests: FriendshipWithProfile[];
-  suggestions: User[];
-  friends: FriendshipWithProfile[];
+    requests:    FriendshipWithUsers[];
+    suggestions: UserWithProfile[];
+    friends:     FriendshipWithUsers[];
 }
