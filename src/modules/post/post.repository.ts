@@ -4,6 +4,7 @@ import { prisma } from "../../prisma/client";
 import { PostRepositoryContract } from "./types/post.contract";
 import { Post } from "./types/post.types";
 import { Prisma } from "../../../generated/prisma/client";
+import { OnlineStatusManager } from "../socket/online.manager";
 
 async function toggleReaction(
     model: "postLike" | "postHeart",
@@ -66,6 +67,7 @@ function mapPost(post: any, userId?: number): Post {
             id: post.author.id.toString(),
             username: post.author.username ?? null,
             avatarUrl: post.author.profile?.avatar ?? null,
+            isOnline: OnlineStatusManager.isUserOnline(Number(post.author.id)),
         },
         isLiked: userIdStr
             ? post.likes?.some((l: any) => l.userId?.toString() === userIdStr)

@@ -1,5 +1,6 @@
 import { prisma } from "../../prisma/client";
 import { ChatRepositoryContract } from "./types/chat.contracts";
+import { OnlineStatusManager } from "../socket/online.manager";
 
 const chatUserSelect = {
     id: true,
@@ -45,9 +46,27 @@ const buildUnreadCount = (userId: number) => ({
     },
 });
 
+function mapChatWithOnlineStatus(chat: any) {
+    if (!chat || !chat.users) return chat;
+
+    return {
+        ...chat,
+        users: chat.users.map((chatUser: any) => {
+            if (!chatUser.user) return chatUser;
+            return {
+                ...chatUser,
+                user: {
+                    ...chatUser.user,
+                    isOnline: OnlineStatusManager.isUserOnline(Number(chatUser.user.id)),
+                },
+            };
+        }),
+    };
+}
+
 export const ChatRepository: ChatRepositoryContract = {
     getGroupChats: async (userId) => {
-        return await prisma.chat.findMany({
+        const chats = await prisma.chat.findMany({
             where: {
                 users: { some: { userId } },
                 isGroup: true,
@@ -61,10 +80,11 @@ export const ChatRepository: ChatRepositoryContract = {
                 _count: buildUnreadCount(userId),
             },
         });
+        return chats.map(mapChatWithOnlineStatus) as any;
     },
 
     getPersonalChats: async (userId) => {
-        return await prisma.chat.findMany({
+        const chats = await prisma.chat.findMany({
             where: {
                 users: { some: { userId } },
                 isGroup: false,
@@ -78,6 +98,7 @@ export const ChatRepository: ChatRepositoryContract = {
                 _count: buildUnreadCount(userId),
             },
         });
+        return chats.map(mapChatWithOnlineStatus) as any;
     },
 
     createChat: async (adminId, data, filename) => {
@@ -86,7 +107,7 @@ export const ChatRepository: ChatRepositoryContract = {
         const pureUserIds = cleanUserIds.filter((id) => id !== cleanAdminId);
         const allUniqueUserIds = Array.from(new Set([cleanAdminId, ...pureUserIds]));
 
-        return await prisma.chat.create({
+        const chat = await prisma.chat.create({
             data: {
                 name: data.name,
                 isGroup: data.isGroup ?? false,
@@ -105,10 +126,11 @@ export const ChatRepository: ChatRepositoryContract = {
                 },
             },
         });
+        return mapChatWithOnlineStatus(chat) as any;
     },
 
     updateChat: async (chatId, data) => {
-        return await prisma.chat.update({
+        const chat = await prisma.chat.update({
             where: { id: chatId },
             data,
             include: {
@@ -117,6 +139,7 @@ export const ChatRepository: ChatRepositoryContract = {
                 },
             },
         });
+        return mapChatWithOnlineStatus(chat) as any;
     },
 
     deleteChat: async (chatId) => {
@@ -133,7 +156,7 @@ export const ChatRepository: ChatRepositoryContract = {
     },
 
     findChatById: async (chatId, userId) => {
-        return await prisma.chat.findUnique({
+        const chat = await prisma.chat.findUnique({
             where: { id: chatId },
             include: {
                 users: {
@@ -142,17 +165,19 @@ export const ChatRepository: ChatRepositoryContract = {
                 },
             },
         });
+        return mapChatWithOnlineStatus(chat) as any;
     },
 
     getChatParticipants: async (chatId) => {
-        return await prisma.chat.findUnique({
+        const chat = await prisma.chat.findUnique({
             where: { id: chatId },
-            include: { users: true },
+            include: { users: { include: { user: true } } },
         });
+        return mapChatWithOnlineStatus(chat) as any;
     },
 
     getChatByParticipants: async (userId, participantId) => {
-        return await prisma.chat.findFirst({
+        const chat = await prisma.chat.findFirst({
             where: {
                 isGroup: false,
                 AND: [
@@ -167,6 +192,7 @@ export const ChatRepository: ChatRepositoryContract = {
                 },
             },
         });
+        return mapChatWithOnlineStatus(chat) as any;
     },
 
     addUsersToChat: async (chatId, userIds) => {
@@ -187,7 +213,7 @@ export const ChatRepository: ChatRepositoryContract = {
             });
         }
 
-        return await prisma.chat.findUniqueOrThrow({
+        const chat = await prisma.chat.findUniqueOrThrow({
             where: { id: chatId },
             include: {
                 users: {
@@ -195,6 +221,7 @@ export const ChatRepository: ChatRepositoryContract = {
                 },
             },
         });
+        return mapChatWithOnlineStatus(chat) as any;
     },
 
     removeUserFromChat: async (chatId, userId) => {

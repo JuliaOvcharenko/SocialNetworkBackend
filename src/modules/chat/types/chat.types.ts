@@ -48,19 +48,26 @@ const unreadCountShape = {
     },
 } as const;
 
-export type ChatWithUsers = Prisma.ChatGetPayload<{
-    include: {
-        users: typeof chatUserSelectShape;
-    };
-}>;
 
-export type ChatWithUsersAndLastMessage = Prisma.ChatGetPayload<{
+export type ChatWithUsers = Omit<Prisma.ChatGetPayload<{
+    include: { users: typeof chatUserSelectShape };
+}>, "users"> & {
+    users: Array<Prisma.ChatUserGetPayload<typeof chatUserSelectShape> & {
+        user: { isOnline?: boolean };
+    }>;
+};
+
+export type ChatWithUsersAndLastMessage = Omit<Prisma.ChatGetPayload<{
     include: {
         users: typeof chatUserSelectShape;
         messages: typeof messageSelectShape;
         _count: typeof unreadCountShape;
     };
-}>;
+}>, "users"> & {
+    users: Array<Prisma.ChatUserGetPayload<typeof chatUserSelectShape> & {
+        user: { isOnline?: boolean };
+    }>;
+};
 
 
 export type ChatWithParticipants = Prisma.ChatGetPayload<{

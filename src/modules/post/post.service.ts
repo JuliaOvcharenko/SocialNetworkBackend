@@ -13,9 +13,9 @@ function normalizePagination(query: PaginationQuery) {
 }
 
 export const PostService: PostServiceContract = {
-    async getAllPosts(query) {
+    async getAllPosts(query, userId?) {
         const { page, limit } = normalizePagination(query);
-        const { posts, total } = await PostRepository.findAllPaginated(page, limit);
+        const { posts, total } = await PostRepository.findAllPaginated(page, limit, userId);
 
         return {
             data: posts,
@@ -25,7 +25,17 @@ export const PostService: PostServiceContract = {
 
     async getMyPosts(userId, query) {
         const { page, limit } = normalizePagination(query);
-        const { posts, total } = await PostRepository.findByAuthorPaginated(userId, page, limit);
+        const { posts, total } = await PostRepository.findByAuthorPaginated(userId, page, limit, userId);
+
+        return {
+            data: posts,
+            meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
+        };
+    },
+
+    async getUserPosts(userId, query, currentUserId?) {
+        const { page, limit } = normalizePagination(query);
+        const { posts, total } = await PostRepository.findByAuthorPaginated(userId, page, limit, currentUserId);
 
         return {
             data: posts,
@@ -69,19 +79,10 @@ export const PostService: PostServiceContract = {
         return { success: true };
     },
 
-    async getUserPosts(userId, query) {
-        const { page, limit } = normalizePagination(query);
-        const { posts, total } = await PostRepository.findByAuthorPaginated(userId, page, limit);
-
-        return {
-            data: posts,
-            meta: { total, page, limit, totalPages: Math.ceil(total / limit) },
-        };
-    },
-
     async toggleLike(userId, postId) {
         return PostRepository.toggleLike(userId, postId);
     },
+    
     async toggleHeart(userId, postId) {
         return PostRepository.toggleHeart(userId, postId);
     },

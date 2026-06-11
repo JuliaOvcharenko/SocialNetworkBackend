@@ -31,8 +31,7 @@ export interface PostRepositoryContract {
 }
 
 export interface PostServiceContract {
-    getAllPosts(query: PaginationQuery, userId?: number): Promise<PaginatedPosts>;
-    getMyPosts(userId: number, query: PaginationQuery): Promise<PaginatedPosts>;
+getAllPosts: (query: PaginationQuery, userId?: number) => Promise<PaginatedPosts>;    getMyPosts(userId: number, query: PaginationQuery): Promise<PaginatedPosts>;
     createPost(userId: number, dto: CreatePostDTO): Promise<Post>;
     updatePost(userId: number, postId: number, dto: UpdatePostDTO): Promise<Post>;
     deletePost(userId: number, postId: number): Promise<DeletePostResult>;
@@ -48,7 +47,7 @@ export interface PostServiceContract {
 export interface PostControllerContract {
     getAllPosts: (
         req: Request<object, PaginatedPosts, object, PaginationQuery>,
-        res: Response<PaginatedPosts>,
+        res: Response<PaginatedPosts, LoginUser>,
         next: NextFunction,
     ) => void;
     getMyPosts: (

@@ -5,6 +5,7 @@ export interface PostAuthor {
     id: number;
     username: string | null;
     avatarUrl: string | null;
+    isOnline?: boolean;
 }
 
 export interface Post {

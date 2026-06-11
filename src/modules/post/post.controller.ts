@@ -4,7 +4,7 @@ import { PostControllerContract } from "./types/post.contract";
 export const PostController: PostControllerContract = {
     async getAllPosts(req, res, next) {
         try {
-            const result = await PostService.getAllPosts(req.query);
+            const result = await PostService.getAllPosts(req.query, res.locals.userId);
             res.json(result);
         } catch (error) {
             next(error);
@@ -70,12 +70,13 @@ export const PostController: PostControllerContract = {
 
     async getUserPosts(req, res, next) {
         try {
-            const result = await PostService.getUserPosts(Number(req.params.userId), req.query);
+            const result = await PostService.getUserPosts(Number(req.params.userId), req.query, res.locals.userId);
             res.json(result);
         } catch (error) {
             next(error);
         }
     },
+
     async toggleLike(req, res, next) {
         try {
             const result = await PostService.toggleLike(
@@ -87,6 +88,7 @@ export const PostController: PostControllerContract = {
             next(e);
         }
     },
+
     async toggleHeart(req, res, next) {
         try {
             const result = await PostService.toggleHeart(

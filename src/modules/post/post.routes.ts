@@ -7,10 +7,11 @@ import { processImageMiddleware, uploadMiddleware } from "../../middlewares/uplo
 
 export const PostRoutes = Router();
 
-PostRoutes.get("/", PostController.getAllPosts);
+PostRoutes.get("/", authenticateMiddleware, PostController.getAllPosts);
 
 PostRoutes.get("/my", authenticateMiddleware, PostController.getMyPosts);
-PostRoutes.get("/:userId", PostController.getUserPosts);
+
+PostRoutes.get("/:userId", authenticateMiddleware, PostController.getUserPosts);
 
 
 PostRoutes.post("/:postId/like", authenticateMiddleware, PostController.toggleLike);
@@ -43,4 +44,3 @@ PostRoutes.delete(
     authenticateMiddleware,
     PostController.deletePost,
 );
-
