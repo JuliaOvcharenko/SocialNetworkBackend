@@ -2,7 +2,7 @@ model Chat {
   id       BigInt     @id @default(autoincrement())
   name     String?    @db.VarChar(30)
   isGroup  Boolean    @map("is_group")
-  avatar   String?    @db.VarChar(100)
+  avatar   String?    @db.VarChar(500)
   adminId  BigInt?    @map("admin_id")
   admin    User?      @relation(fields: [adminId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_app_chat_admin_id_f1deddb9_fk_user_app_user_id")
   users    ChatUser[]

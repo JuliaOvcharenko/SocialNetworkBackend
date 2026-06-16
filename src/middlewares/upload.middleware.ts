@@ -1,9 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import multer, { memoryStorage } from "multer";
-import { BadRequestError } from "../errors/app.errors";
-import { join } from "node:path";
 import sharp from "sharp";
-import { originalFiles, shakalFiles } from "../config/path";
+import { cloudinary } from "../config/cloudinary";
 
 export const uploadMiddleware = multer({
     storage: memoryStorage(),
@@ -11,7 +9,29 @@ export const uploadMiddleware = multer({
         fileSize: 20 * 1024 * 1024,
     },
 });
-export function processImageMiddleware(width: number, quality: number = 80) {
+
+function uploadBufferToCloudinary(buffer: Buffer, folder: string): Promise<string> {
+    return new Promise((resolve, reject) => {
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder,
+                resource_type: "image",
+                format: "jpeg",
+            },
+            (error, result) => {
+                if (error || !result) return reject(error);
+                resolve(result.secure_url);
+            },
+        );
+        stream.end(buffer);
+    });
+}
+
+export function processImageMiddleware(
+    width: number,
+    quality: number = 80,
+    folder: string = "uploads",
+) {
     return async function (req: Request, res: Response, next: NextFunction) {
         try {
             const file = req.file;
@@ -21,15 +41,15 @@ export function processImageMiddleware(width: number, quality: number = 80) {
                 return;
             }
 
-            const filename = `${Date.now()}.jpeg`;
-            const originalFilePath = join(originalFiles, filename);
-            const shakalFilePath = join(shakalFiles, filename);
+            const thumbnailBuffer = await sharp(file.buffer)
+                .resize(width)
+                .jpeg({ quality })
+                .toBuffer();
 
-            await sharp(file.buffer).jpeg({ quality: 100, mozjpeg: true }).toFile(originalFilePath);
+            const url = await uploadBufferToCloudinary(thumbnailBuffer, folder);
 
-            await sharp(file.buffer).resize(width).jpeg({ quality }).toFile(shakalFilePath);
+            file.filename = url;
 
-            file.filename = filename;
             next();
         } catch (error) {
             next(error);

@@ -7,12 +7,11 @@ import { updatePhotoVisibilitySchema } from "./photo.schema";
 
 export const PhotoRoutes = Router({ mergeParams: true });
 
-
 PhotoRoutes.post(
     "/:id/photos",
     authenticateMiddleware,
     uploadMiddleware.single("photo"),
-    processImageMiddleware(800),
+    processImageMiddleware(800, 80, "albums"),
     PhotoController.create,
 );
 
@@ -23,14 +22,6 @@ PhotoRoutes.patch(
     PhotoController.updateVisibility,
 );
 
-PhotoRoutes.get(
-    "/:id/photos",
-    authenticateMiddleware,
-    PhotoController.getAll,
-);
+PhotoRoutes.get("/:id/photos", authenticateMiddleware, PhotoController.getAll);
 
-PhotoRoutes.delete(
-    "/:id/photos/:photoId",
-    authenticateMiddleware,
-    PhotoController.delete,
-);
+PhotoRoutes.delete("/:id/photos/:photoId", authenticateMiddleware, PhotoController.delete);

@@ -1,6 +1,6 @@
 model MessageImage {
   id        BigInt  @id @default(autoincrement())
-  image     String  @db.VarChar(100)
+  image     String  @db.VarChar(500)
   messageId BigInt  @map("message_id")
   message   Message @relation(fields: [messageId], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "chat_app_messageimag_message_id_7967b5cb_fk_chat_app_")
 

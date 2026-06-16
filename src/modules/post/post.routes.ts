@@ -13,7 +13,6 @@ PostRoutes.get("/my", authenticateMiddleware, PostController.getMyPosts);
 
 PostRoutes.get("/:userId", authenticateMiddleware, PostController.getUserPosts);
 
-
 PostRoutes.post("/:postId/like", authenticateMiddleware, PostController.toggleLike);
 PostRoutes.post("/:postId/heart", authenticateMiddleware, PostController.toggleHeart);
 
@@ -21,7 +20,7 @@ PostRoutes.post(
     "/upload",
     authenticateMiddleware,
     uploadMiddleware.single("image"),
-    processImageMiddleware(800),
+    processImageMiddleware(800, 80, "posts"),
     PostController.uploadImage,
 );
 
@@ -39,8 +38,4 @@ PostRoutes.patch(
     PostController.updatePost,
 );
 
-PostRoutes.delete(
-    "/:postId",
-    authenticateMiddleware,
-    PostController.deletePost,
-);
+PostRoutes.delete("/:postId", authenticateMiddleware, PostController.deletePost);

@@ -18,7 +18,6 @@ export const MessageController: MessageHttpControllerContract = {
             res.status(400).json("No file provided");
             return;
         }
-        const baseUrl = process.env.BASE_URL ?? "http://localhost:3000";
-        res.json({ url: `${baseUrl}/media/shakal/${file.filename}` });
+        res.json({ url: file.filename });
     },
 };

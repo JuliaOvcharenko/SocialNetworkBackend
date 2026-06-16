@@ -9,7 +9,7 @@ messageRouter.post(
     "/upload",
     authenticateMiddleware,
     uploadMiddleware.single("file"),
-    processImageMiddleware(800),
+    processImageMiddleware(800, 80, "chats"),
     MessageController.uploadImage
 );
 

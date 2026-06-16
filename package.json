@@ -20,6 +20,7 @@
         "bcrypt": "^6.0.0",
         "bcryptjs": "^3.0.3",
         "better-sqlite3": "^12.8.0",
+        "cloudinary": "^2.10.0",
         "cors": "^2.8.6",
         "envalid": "^8.1.1",
         "express": "^5.2.1",

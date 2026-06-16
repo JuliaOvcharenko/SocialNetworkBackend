@@ -1,7 +1,7 @@
 model Post {
   id        BigInt      @id @default(autoincrement())
-  title     String      @db.VarChar(255)
-  topic     String?     @db.VarChar(255)
+  title     String      @db.VarChar(500)
+  topic     String?     @db.VarChar(500)
   content   String
   createdAt DateTime    @map("created_at") @db.Timestamptz(6)
   author_id BigInt

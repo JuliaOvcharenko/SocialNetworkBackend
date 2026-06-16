@@ -10,4 +10,7 @@ export const env = cleanEnv(process.env, {
 	TOKEN_TTL: str({ default: "7d" }),
 	HOST_EMAIL_ADDRESS: str(),
 	HOST_EMAIL_PASSWORD: str(),
+	CLOUDINARY_CLOUD_NAME: str(),
+    CLOUDINARY_API_KEY: str(),
+    CLOUDINARY_API_SECRET: str(),
 });

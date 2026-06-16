@@ -47,7 +47,7 @@ async function bootstrap() {
         (BigInt.prototype as any).toJSON = function () { return Number(this); };
         SocketManager.initSocketServer(httpServer);
         httpServer.listen(env.PORT, "0.0.0.0", () => {
-            console.log(`Server started on: http://192.168.0.125:${env.PORT}`);
+            console.log(`Server started on: http://192.168.0.101:${env.PORT}`);
         });
     } catch (error) {
         console.error(error);
