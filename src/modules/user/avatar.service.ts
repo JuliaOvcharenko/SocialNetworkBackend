@@ -3,7 +3,7 @@ import { NotFoundError } from "../../errors/app.errors";
 
 export const AvatarService = {
     async uploadAvatar(userId: number, file: any) {
-        const avatarUrl = `/media/shakal/${file.filename}`;
+        const avatarUrl = file.filename;
 
         const profile = await prisma.profile.findUnique({
             where: { userId },

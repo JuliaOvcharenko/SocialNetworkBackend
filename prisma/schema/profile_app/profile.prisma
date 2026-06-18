@@ -2,7 +2,7 @@ model Profile {
   id                 BigInt    @id @default(autoincrement())
   birthDate          DateTime? @map("birth_date") @db.Date
   signature          String?   @db.VarChar(100)
-  avatar             String?   @db.VarChar(100)
+  avatar             String?   @db.VarChar(500)
   pseudonym          String?   @db.VarChar(50)
   is_text_signature  Boolean
   is_image_signature Boolean

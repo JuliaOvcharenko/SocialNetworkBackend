@@ -61,8 +61,7 @@ export const PostController: PostControllerContract = {
                 return;
             }
 
-            const imageUrl = `/media/shakal/${req.file.filename}`;
-            res.json({ url: imageUrl });
+            res.json({ url: req.file.filename });
         } catch (error) {
             next(error);
         }
@@ -70,7 +69,11 @@ export const PostController: PostControllerContract = {
 
     async getUserPosts(req, res, next) {
         try {
-            const result = await PostService.getUserPosts(Number(req.params.userId), req.query, res.locals.userId);
+            const result = await PostService.getUserPosts(
+                Number(req.params.userId),
+                req.query,
+                res.locals.userId,
+            );
             res.json(result);
         } catch (error) {
             next(error);
