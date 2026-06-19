@@ -11,7 +11,7 @@ PhotoRoutes.post(
     "/:id/photos",
     authenticateMiddleware,
     uploadMiddleware.single("photo"),
-    processImageMiddleware(800, 80, "albums"),
+    processImageMiddleware(800, 80, "profile_app/albums"),
     PhotoController.create,
 );
 

@@ -143,8 +143,15 @@ export const ChatRepository: ChatRepositoryContract = {
     },
 
     deleteChat: async (chatId) => {
+        const messages = await prisma.message.findMany({
+            where: { chatId },
+            select: { id: true },
+        });
+        const messageIds = messages.map((m) => m.id);
+
         await prisma.$transaction([
-            prisma.messageImage.deleteMany({ where: { message: { chatId } } }),
+            prisma.messageReader.deleteMany({ where: { message_id: { in: messageIds } } }),
+            prisma.messageImage.deleteMany({ where: { messageId: { in: messageIds } } }),
             prisma.message.deleteMany({ where: { chatId } }),
             prisma.chatUser.deleteMany({ where: { chatId } }),
             prisma.chat.delete({ where: { id: chatId } }),

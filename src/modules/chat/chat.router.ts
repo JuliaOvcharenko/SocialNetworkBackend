@@ -12,19 +12,20 @@ chatRouter.post(
     "/",
     authenticateMiddleware,
     uploadMiddleware.single("avatar"),
-    processImageMiddleware(800, 80, "chat-avatars"),
+    processImageMiddleware(800, 80, "chat_app/group_avatars"),
     ChatController.createChat,
 );
+
+chatRouter.delete("/leave", authenticateMiddleware, ChatController.leaveChat);
 
 chatRouter.patch(
     "/:id",
     authenticateMiddleware,
     uploadMiddleware.single("avatar"),
-    processImageMiddleware(800, 80, "chat-avatars"),
+    processImageMiddleware(800, 80, "chat_app/group_avatars"),
     ChatController.updateChat,
 );
 
 chatRouter.patch("/:id", authenticateMiddleware, ChatController.updateChat);
 chatRouter.delete("/:id", authenticateMiddleware, ChatController.deleteChat);
-chatRouter.delete("/leave", authenticateMiddleware, ChatController.leaveChat);
 chatRouter.get("/:chatId", authenticateMiddleware, ChatController.findChatById);

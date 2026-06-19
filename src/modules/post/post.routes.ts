@@ -20,7 +20,7 @@ PostRoutes.post(
     "/upload",
     authenticateMiddleware,
     uploadMiddleware.single("image"),
-    processImageMiddleware(800, 80, "posts"),
+    processImageMiddleware(800, 80, "post_app/compressed_images"),
     PostController.uploadImage,
 );
 

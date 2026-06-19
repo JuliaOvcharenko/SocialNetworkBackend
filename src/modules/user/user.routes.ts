@@ -27,7 +27,7 @@ UserRoutes.post(
     "/avatar",
     authenticateMiddleware,
     uploadMiddleware.single("avatar"),
-    processImageMiddleware(300, 80, "avatars"),
+    processImageMiddleware(300, 80, "profile_app/avatars"),
     UserController.uploadAvatar,
 );
 
