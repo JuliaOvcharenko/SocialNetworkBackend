@@ -83,7 +83,7 @@ export const UserController: UserControllerContract = {
 
     getById: async (req, res, next) => {
         try {
-            const user = await UserService.getById(Number(req.params.id));
+            const user = await UserService.getById(+req.params.id);
             res.json(user);
         } catch (error) {
             next(error);
